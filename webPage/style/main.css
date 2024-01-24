@@ -1,0 +1,58 @@
+.card-container{
+    padding-top: 120px;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+}
+.veg-card img{
+    height: 100%;
+    width: 35%;
+    object-fit: cover;
+    border-radius: 20px;
+    margin-right: 20px;
+}
+.veg-card{
+    padding: 10px 20px 10px 20px;
+    display: flex;
+    align-items: center;
+    border-radius: 20px;
+    height: 124px;
+    width: 90%;
+    max-width: 381px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+}
+.veg-card-content div:nth-child(1){
+    font-size: 20px;
+    font-weight: bold;
+    text-decoration:underline;
+}
+.veg-card-content div:nth-child(2){
+    font-size: 16px;
+    font-weight:normal;
+}
+.veg-card-content div:nth-child(3){
+    font-size: 14px;
+    font-weight: normal;
+    color: #686868;
+}
+.veg-card-content div{
+    margin-bottom: 10px;
+}
+.add-card-bottom{
+    right: 15px;
+    bottom: 15px;
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 67px;
+    height: 67px;
+    background-color: #2E488B;
+    border-radius: 100%;
+}
+.add-card-bottom .fa-solid{
+    color: white;
+    font-size: 45px;
+}
