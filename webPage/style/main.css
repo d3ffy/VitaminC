@@ -41,8 +41,8 @@
     margin-bottom: 10px;
 }
 .add-card-bottom{
-    right: 15px;
-    bottom: 15px;
+    right: 20px;
+    bottom: 120px;
     position: fixed;
     display: flex;
     align-items: center;

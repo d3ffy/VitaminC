@@ -1,0 +1,29 @@
+@media screen and (max-width: 800px) {
+.menu-bar-container{
+    position: fixed;
+    bottom: 0%;
+    width: 100%;
+}
+.menu-bar{
+    display: flex;
+    background-color: #2E488B;
+    width: 100%;
+    height: 95px;
+    position: relative;
+    align-items: center;
+    justify-content: space-around;
+}
+.center-btn{
+    position: absolute;
+    left: 50%;
+    transform: translate(-50% , -50%);
+    background-color: #2E488B;
+    width: 133px;
+    height: 133px;
+    border-radius: 100%;
+    border: 1px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+}
