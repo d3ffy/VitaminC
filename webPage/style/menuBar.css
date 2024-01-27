@@ -14,9 +14,7 @@
     justify-content: space-around;
 }
 .center-btn{
-    position: absolute;
-    left: 50%;
-    transform: translate(-50% , -50%);
+    transform: translate(0% , -10%);
     background-color: #2E488B;
     width: 133px;
     height: 133px;

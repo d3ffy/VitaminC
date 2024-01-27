@@ -6,6 +6,7 @@
     <title>Document</title>
     <link rel="stylesheet" href="style/menu.css">
     <link rel="stylesheet" href="style/wifi.css">
+    <link rel="stylesheet" href="style/menuBar.css">
 </head>
 <body>
     <!-- header------------------ -->
@@ -16,9 +17,9 @@
             <div class="menu-buttom"><i class="fa-solid fa-bars"></i></div>
         </div>
         <div class="opened-menu-container menu-hidden">
-            <div>หน้าหลัก</div>
-            <div>ตรวจสอบประวัติ</div>
-            <div>การเชื่อมต่อ</div>
+            <div onclick="goToPage('main')">หน้าหลัก</div>
+            <div onclick="goToPage('main')">ตรวจสอบประวัติ</div>
+            <div onclick="goToPage('wifi')">การเชื่อมต่อ</div>
         </div>
     </div>
     <!-- header------------------ -->
@@ -50,6 +51,14 @@
                     <span class="wifi-status">connect</span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="menu-bar-container">
+        <div class="menu-bar">
+            <img onclick="goToPage('history')" src="image/left.png" alt="">
+            <div onclick="goToPage('main')" class="center-btn" href=""><img src="image/center.png" alt=""></div>
+            <img onclick="goToPage('wifi')" src="image/right.png" alt="">
         </div>
     </div>
 

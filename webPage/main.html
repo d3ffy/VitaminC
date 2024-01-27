@@ -18,16 +18,16 @@
                 <div class="menu-buttom"><i class="fa-solid fa-bars"></i></div>
             </div>
             <div class="opened-menu-container menu-hidden">
-                <div>หน้าหลัก</div>
-                <div>ตรวจสอบประวัติ</div>
-                <div>การเชื่อมต่อ</div>
+                <div onclick="goToPage('main')">หน้าหลัก</div>
+                <div onclick="goToPage('main')">ตรวจสอบประวัติ</div>
+                <div onclick="goToPage('wifi')">การเชื่อมต่อ</div>
             </div>
         </div>
     <!-- header------------------ -->
 
     <!-- content---------------------- -->
         <div class="card-container">
-            <div class="veg-card">
+            <div onclick="goToPage('vegCardDetail')" class="veg-card">
                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ673V92kDN4gI8c1INUMAHZAYwBYoxp4zPgQ&usqp=CAU" alt="">
                 <div class="veg-card-content">
                     <div>ชื่อผัก</div>
@@ -44,7 +44,7 @@
                 </div>
             </div>
         </div>
-        <div class="add-card-bottom"><i class="fa-solid fa-plus"></i></div>
+        <div  onclick="goToPage('vegCardDetail')" class="add-card-bottom"><i class="fa-solid fa-plus"></i></div>
     </div>
     <!-- content---------------------- -->
 
@@ -54,9 +54,9 @@
 
     <div class="menu-bar-container">
         <div class="menu-bar">
-            <a href=""><img src="image/left.png" alt=""></a>
-            <a href=""><div class="center-btn" href=""><img class="center-btn-img" src="image/center.png" alt=""></div></a>
-            <a href=""><img src="image/right.png" alt=""></a>
+            <img onclick="goToPage('history')" src="image/left.png" alt="">
+            <div onclick="goToPage('main')" class="center-btn" href=""><img src="image/center.png" alt=""></div>
+            <img onclick="goToPage('wifi')" src="image/right.png" alt="">
         </div>
     </div>
 

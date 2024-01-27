@@ -1,4 +1,4 @@
-// เปิดปิดแถบเมนูขวาบน
+// hamberger menu right of menu bar
 document.addEventListener('DOMContentLoaded', function () {
     const menuButton = document.querySelector('.menu-buttom');
     const openedMenuContaine = document.querySelector('.opened-menu-container');
@@ -26,4 +26,10 @@ window.onclick = function(event) {
             }
         }
     }
+}
+
+// navigatoion function
+function goToPage(pageName) {
+    window.location.href = pageName + '.html';
+    console.log('page changed to ' +pageName);
 }

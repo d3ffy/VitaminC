@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style/menu.css">
+    <link rel="stylesheet" href="style/menuBar.css">
+    <link rel="stylesheet" href="style/history.css">
+</head>
+<body>
+    <!-- header------------------ -->
+    <div class="menu">
+        <div class="menu-container">
+            <i class="fa-solid fa-chevron-left"   ></i>
+            <span>ผลลัพธ์</span>
+            <div class="menu-buttom"><i class="fa-solid fa-bars"></i></div>
+        </div>
+        <div class="opened-menu-container menu-hidden">
+            <div onclick="goToPage('main')">หน้าหลัก</div>
+            <div onclick="goToPage('main')">ตรวจสอบประวัติ</div>
+            <div onclick="goToPage('wifi')">การเชื่อมต่อ</div>
+        </div>
+    </div>
+    <!-- header------------------ -->
+
+
+    <div class="history-container">
+        
+        <div class="history-card">
+            <div class="title">วันนี้</div>
+            <div class="veg-info-container">
+                <div class="veg-info">
+                    <div class="veg-info-name">แปลงผักคอส</div>
+                    <div class="veg-NPK"><span>Nitrogen : 180</span><span>Phosphorus : 98.1</span><span>Potassium : 66.2</span></div>
+                </div>
+                <div class="veg-info">
+                    <div class="veg-info-name">แปลงผักคอส</div>
+                    <div class="veg-NPK"><span>Nitrogen : 180</span><span>Phosphorus : 98.1</span><span>Potassium : 66.2</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-card">
+            <div class="title">วันนี้</div>
+            <div class="veg-info-container">
+                <div class="veg-info">
+                    <div class="veg-info-name">แปลงผักคอส</div>
+                    <div class="veg-NPK"><span>Nitrogen : 180</span><span>Phosphorus : 98.1</span><span>Potassium : 66.2</span></div>
+                </div>
+                <div class="veg-info">
+                    <div class="veg-info-name">แปลงผักคอส</div>
+                    <div class="veg-NPK"><span>Nitrogen : 180</span><span>Phosphorus : 98.1</span><span>Potassium : 66.2</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-card">
+            <div class="title">วันนี้</div>
+            <div class="veg-info-container">
+                <div class="veg-info">
+                    <div class="veg-info-name">แปลงผักคอส</div>
+                    <div class="veg-NPK"><span>Nitrogen : 180</span><span>Phosphorus : 98.1</span><span>Potassium : 66.2</span></div>
+                </div>
+                <div class="veg-info">
+                    <div class="veg-info-name">แปลงผักคอส</div>
+                    <div class="veg-NPK"><span>Nitrogen : 180</span><span>Phosphorus : 98.1</span><span>Potassium : 66.2</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-card">
+            <div class="title">วันนี้</div>
+            <div class="veg-info-container">
+                <div class="veg-info">
+                    <div class="veg-info-name">แปลงผักคอส</div>
+                    <div class="veg-NPK"><span>Nitrogen : 180</span><span>Phosphorus : 98.1</span><span>Potassium : 66.2</span></div>
+                </div>
+                <div class="veg-info">
+                    <div class="veg-info-name">แปลงผักคอส</div>
+                    <div class="veg-NPK"><span>Nitrogen : 180</span><span>Phosphorus : 98.1</span><span>Potassium : 66.2</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="menu-bar-container">
+        <div class="menu-bar">
+            <img onclick="goToPage('history')" src="image/left.png" alt="">
+            <div onclick="goToPage('main')" class="center-btn" href=""><img src="image/center.png" alt=""></div>
+            <img onclick="goToPage('wifi')" src="image/right.png" alt="">
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+    <script src="https://kit.fontawesome.com/a393f06aba.js" crossorigin="anonymous"></script>
+</body>
+</html>
