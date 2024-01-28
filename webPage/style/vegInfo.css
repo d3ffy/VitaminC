@@ -1,0 +1,49 @@
+.vegInfo-container{
+    padding-top: 100px;
+    width: 90%;
+    margin: 0 auto;
+    font-size: 15px;
+}
+.vegInfo-container img{
+    width: 100%;
+    height: 261px;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+.title{
+    text-decoration: underline;
+    margin-bottom: 20px;
+}
+p{
+    text-indent: 30px;
+}
+.descript{
+    font-size: 14px;
+}
+.veg-name-container{
+    margin-bottom: 20px;
+}
+.veg-name-container div{
+    margin-top: 5px;
+}
+.NPK-container{
+    padding-bottom: 200px;
+    margin-top: 20px;
+}
+table{
+    background-color: #D6E8DC;
+    width: 100%;
+    height: 94px;
+    border: 1px solid #069838;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+tr{
+    align-items: center;
+    text-align: center;
+}
+td , th{
+    border: 1px solid black;
+}
+
