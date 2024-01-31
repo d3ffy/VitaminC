@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style/menu.css">
     <link rel="stylesheet" href="style/main.css">
     <link rel="stylesheet" href="style/menuBar.css">
+    <link rel="stylesheet" href="style/formUI.css">
 </head>
 <body>
     <div class="container">
@@ -35,18 +36,28 @@
                     <div>every 3 day</div>
                 </div>
             </div>
-            <div class="veg-card">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ673V92kDN4gI8c1INUMAHZAYwBYoxp4zPgQ&usqp=CAU" alt="">
-                <div class="veg-card-content">
-                    <div>ชื่อผัก</div>
-                    <div>ตรวจสอบล่าสุด</div>
-                    <div>every 3 day</div>
-                </div>
-            </div>
         </div>
-        <div  onclick="goToPage('vegCardDetail')" class="add-card-bottom"><i class="fa-solid fa-plus"></i></div>
+        <div onclick="createVegCard('กวางตุ้ง', '2024-01-24', '3', 
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ673V92kDN4gI8c1INUMAHZAYwBYoxp4zPgQ&usqp=CAU')" 
+        id="add-card-bottom" class="add-card-bottom"><i class="fa-solid fa-plus"></i></div>
     </div>
     <!-- content---------------------- -->
+
+    <div id="dataEntryForm" class="hide">
+        <label class="formLabel" for="plot_name">ชื่อแปลงผัก:</label>
+        <input class="formInput" type="text" id="plot_name" name="plot_name" placeholder="Enter plot name">
+
+        <label class="formLabel" for="veg_name">ประเภทผัก:</label>
+        <input class="formInput" type="text" id="veg_name" name="veg_name" placeholder="Enter vegetable name">
+    
+        <label class="formLabel"  for="frequency">ตรวจทุกๆ (วัน):</label>
+        <input class="formInput" type="number" id="frequency" name="frequency" placeholder="Enter checking frequency">
+    
+        <label for="imageUpload">Choose an image:</label>
+        <input type="file" id="imageUpload" name="image" accept="image/*">
+        
+        <button id="submitFormButton">Submit</button>
+    </div>
 
     <p>Reading Red: <span id="reading-red"></span></p>
     <p>Reading Green: <span id="reading-green"></span></p>
@@ -63,5 +74,6 @@
     <script type="module" src="firebase.js"></script>
     <script src="index.js"></script>
     <script src="https://kit.fontawesome.com/a393f06aba.js" crossorigin="anonymous"></script>
+    <script src="script/main.js"></script>
 </body>
 </html>
