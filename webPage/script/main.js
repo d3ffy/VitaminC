@@ -46,6 +46,3 @@ document.addEventListener('click', function(event) {
         dataEntryForm.classList.add('hide');
     }
 });
-
-
-

@@ -20,7 +20,7 @@
             </div>
             <div class="opened-menu-container menu-hidden">
                 <div onclick="goToPage('main')">หน้าหลัก</div>
-                <div onclick="goToPage('main')">ตรวจสอบประวัติ</div>
+                <div onclick="goToPage('history')">ตรวจสอบประวัติ</div>
                 <div onclick="goToPage('wifi')">การเชื่อมต่อ</div>
             </div>
         </div>
@@ -59,10 +59,6 @@
         <button id="submitFormButton">Submit</button>
     </div>
 
-    <p>Reading Red: <span id="reading-red"></span></p>
-    <p>Reading Green: <span id="reading-green"></span></p>
-    <p>Reading Blue: <span id="reading-blue"></span></p>
-
     <div class="menu-bar-container">
         <div class="menu-bar">
             <img onclick="goToPage('history')" src="image/left.png" alt="">
@@ -71,8 +67,7 @@
         </div>
     </div>
 
-    <script type="module" src="firebase.js"></script>
-    <script src="index.js"></script>
+    <script src="script/index.js"></script>
     <script src="https://kit.fontawesome.com/a393f06aba.js" crossorigin="anonymous"></script>
     <script src="script/main.js"></script>
 </body>

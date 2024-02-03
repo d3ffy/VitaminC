@@ -3,7 +3,7 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10
 import { getFirestore, collection, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
 // import { firebaseConfig } from '/firebaseConfig.js'
 
-// ย้าย firebaseConfig มาไว้ในนี้แทน import มาจาก '/firebaseConfig.js' แล้วมันดึงข้อมูลมาไม่ได้ ไม่รู้เป็นไร
+// ค่อยแก้ละกัน -> firebaseConfig.js
 const firebaseConfig = {
   apiKey: "AIzaSyCPkTRiFpWFcjuJvAiOZCqoMXJN2Gvtzjc",
   authDomain: "vitaminc-4695a.firebaseapp.com",
@@ -39,22 +39,24 @@ function updateElement(id, value) {
   }
 }
 
-// Changing Value
-onValue(databaseRed, (snapshot) => {
-  const data = snapshot.val();
-  updateElement("reading-red", data);
-});
-
-onValue(databaseGreen, (snapshot) => {
-  const data = snapshot.val();
-  updateElement("reading-green", data);
-});
-
-onValue(databaseBlue, (snapshot) => {
-  const data = snapshot.val();
-  updateElement("reading-blue", data);
-});
-
+// Check Value from realtimeDB
+function checkValue() {
+  onValue(databaseRed, (snapshot) => {
+    const data = snapshot.val();
+    updateElement("reading-red", data);
+  });
+  
+  onValue(databaseGreen, (snapshot) => {
+    const data = snapshot.val();
+    updateElement("reading-green", data);
+  });
+  
+  onValue(databaseBlue, (snapshot) => {
+    const data = snapshot.val();
+    updateElement("reading-blue", data);
+  });
+};
+checkValue();
 
 // get vegname from firestoreDB
 const logFirstPlotData = async () => {

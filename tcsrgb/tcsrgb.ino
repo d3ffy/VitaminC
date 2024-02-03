@@ -26,15 +26,13 @@
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
-bool signupOK = false;
-unsigned long sendDataPrevMillis = 0;
 int intValue;
 float floatValue;
 
 // Define int variables
-int red = 0;
-int green = 0;
-int blue = 0;
+int redValue = 0;
+int greenValue = 0;
+int blueValue = 0;
 int frequency = 0;
 
 void setup() {
@@ -44,7 +42,7 @@ void setup() {
   Serial.begin(115200); // Set the baudrate
 
   Serial.println("NPK Reader Project with TCS3200");
-  Serial.println("Develop by VitaminC Group for SF341 & CN334");
+  Serial.println("Develop by VitaminC Group for SF341 & SF342");
 
   pinMode(PIN_RED,   OUTPUT);
   pinMode(PIN_GREEN, OUTPUT);
@@ -70,10 +68,11 @@ void setup() {
   // Sign up as annonymous
   if (Firebase.signUp(&config, &auth, "", "")){
     Serial.println("Connected to Firebase!");
-    signupOK = true;
+    turnLight(0, 255, 0);
   }
   else {
     Serial.printf("%s\n", config.signer.signupError.message.c_str());
+    turnLight(255, 0, 0);
   }
 
   Firebase.begin(&config, &auth);
@@ -81,44 +80,20 @@ void setup() {
 }
 
 void loop() {
-  red = getRed();
-  delay(200); 
-  green = getGreen();
-  delay(200); 
-  blue = getBlue();
-  delay(200); 
+  getColorValue();
   Serial.print("Red Freq = ");
-  Serial.print(red); 
+  Serial.print(redValue); 
   Serial.print("   ");
   Serial.print("Green Freq = ");
-  Serial.print(green); 
+  Serial.print(greenValue); 
   Serial.print("   ");
   Serial.print("Blue Freq = ");
-  Serial.println(blue); 
-
-  // color code #00C9CC (R = 0,   G = 201, B = 204)
-  analogWrite(PIN_RED,   0);
-  analogWrite(PIN_GREEN, 0);
-  analogWrite(PIN_BLUE,  256);
-
-  // delay(1000); // keep the color 1 second
-
-  // // color code #F7788A (R = 247, G = 120, B = 138)
-  // analogWrite(PIN_RED,   0);
-  // analogWrite(PIN_GREEN, 256);
-  // analogWrite(PIN_BLUE,  0);
-
-  // delay(1000); // keep the color 1 second
-
-  // // color code #34A853 (R = 52,  G = 168, B = 83)
-  // analogWrite(PIN_RED,   256);
-  // analogWrite(PIN_GREEN, 0);
-  // analogWrite(PIN_BLUE,  0);
+  Serial.println(blueValue); 
 
   // Send Value to Firebase
-  sendColorToFirebase("test/red", red);
-  sendColorToFirebase("test/green", green);
-  sendColorToFirebase("test/blue", blue);
+  sendColorToFirebase("test/red", redValue);
+  sendColorToFirebase("test/green", greenValue);
+  sendColorToFirebase("test/blue", blueValue);
   delay(5000);
 }
 
@@ -141,6 +116,21 @@ int getBlue() {
   digitalWrite(S3,HIGH);
   frequency = pulseIn(sensorOut, LOW); // Get the Blue Color Frequency
   return frequency;
+}
+
+void getColorValue() {
+  redValue = getRed();
+  delay(400); 
+  greenValue = getGreen();
+  delay(400); 
+  blueValue = getBlue();
+  delay(400); 
+}
+
+void turnLight(int red, int green, int blue) {
+  analogWrite(PIN_RED,   red);
+  analogWrite(PIN_GREEN, green);
+  analogWrite(PIN_BLUE,  blue);
 }
 
 void sendColorToFirebase(const char* colorPath, int colorValue) {
