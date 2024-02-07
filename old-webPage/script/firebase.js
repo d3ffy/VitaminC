@@ -1,19 +1,19 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
 import { getFirestore, collection, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
-// import { firebaseConfig } from '/firebaseConfig.js'
+import { firebaseConfig } from '/script/firebaseConfig.js'
 
 // ค่อยแก้ละกัน -> firebaseConfig.js
-const firebaseConfig = {
-  apiKey: "AIzaSyCPkTRiFpWFcjuJvAiOZCqoMXJN2Gvtzjc",
-  authDomain: "vitaminc-4695a.firebaseapp.com",
-  databaseURL: "https://vitaminc-4695a-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "vitaminc-4695a",
-  storageBucket: "vitaminc-4695a.appspot.com",
-  messagingSenderId: "655752985201",
-  appId: "1:655752985201:web:e417d6d21ae348878ff9d0",
-  measurementId: "G-B26JQT515C"
-}
+// const firebaseConfig = {
+//   apiKey: "AIzaSyCPkTRiFpWFcjuJvAiOZCqoMXJN2Gvtzjc",
+//   authDomain: "vitaminc-4695a.firebaseapp.com",
+//   databaseURL: "https://vitaminc-4695a-default-rtdb.asia-southeast1.firebasedatabase.app",
+//   projectId: "vitaminc-4695a",
+//   storageBucket: "vitaminc-4695a.appspot.com",
+//   messagingSenderId: "655752985201",
+//   appId: "1:655752985201:web:e417d6d21ae348878ff9d0",
+//   measurementId: "G-B26JQT515C"
+// }
 
 const app = initializeApp(firebaseConfig);
 const realtimeDB = getDatabase(app);

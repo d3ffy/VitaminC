@@ -1,4 +1,4 @@
-const firebaseConfig = {
+export const firebaseConfig = {
     apiKey: "AIzaSyCPkTRiFpWFcjuJvAiOZCqoMXJN2Gvtzjc",
     authDomain: "vitaminc-4695a.firebaseapp.com",
     databaseURL: "https://vitaminc-4695a-default-rtdb.asia-southeast1.firebasedatabase.app",

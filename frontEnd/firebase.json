@@ -3,7 +3,7 @@
     "rules": "database.rules.json"
   },
   "hosting": {
-    "public": "webPage",
+    "public": "build",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -12,8 +12,12 @@
     "rewrites": [
       {
         "source": "**",
-        "destination": "/main.html"
+        "destination": "/index.html"
       }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }
