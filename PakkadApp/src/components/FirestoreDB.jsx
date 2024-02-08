@@ -13,23 +13,27 @@ const FirestoreDB = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [users, setUsers] = useState([]);
-  const [errorMessage, setErrorMessage] = useState('');
+  var wasFetch = false;
 
   useEffect(() => {
     // Fetch data from Firestore when the component mounts
     async function fetchUsers() {
       try {
-        const querySnapshot = await getDocs(userCollection);
-        const userData = querySnapshot.docs.map((doc) => doc.data());
-        setUsers(userData);
+        if (!wasFetch) {
+          const querySnapshot = await getDocs(userCollection);
+          const userData = querySnapshot.docs.map((doc) => doc.data());
+          setUsers(userData);
+
+          // Control over fetching
+          wasFetch = true;
+        }
       } catch (error) {
         console.error('Error fetching documents: ', error.message);
-        setErrorMessage('Error fetching data. Please try again.');
       }
     }
-
+  
     fetchUsers();
-  }, [userCollection]);
+  }, []); 
 
   async function insertDocument() {
     try {
@@ -42,13 +46,14 @@ const FirestoreDB = () => {
       // Clear Input Fields
       setFirstName('');
       setLastName('');
-      setErrorMessage('');
+
+      // Clear fetching control
+      wasFetch = false;
 
       // Success Notification 
       alert(`new document has been inserted as ${ docRef.id }`)
     } catch (error) {
       console.error('Error adding document: ', error.message);
-      setErrorMessage('Error saving the document. Please try again.');
     }
   }
 
@@ -58,9 +63,6 @@ const FirestoreDB = () => {
       <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} />
 
       <button onClick={insertDocument}>Save</button>
-
-      {/* Display error message if any */}
-      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
 
       {/* Display the list of users */}
       <div>
