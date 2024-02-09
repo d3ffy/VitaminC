@@ -1,17 +1,22 @@
 import React from "react";
-import PAKKAD from '../image/PAKKAD.png';
+import PAKKAD from '../image/PAKKAD1.png';
 import styled from 'styled-components';
 
 const Container = styled.div`
-    background-color: var(--mainColor);
+    position: fixed;
+    background-color: #FFFFFF;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 125px;
+    height: 7.8rem;
+    width: 100%;
+    top: 0px;
+    z-index: 100;
+    box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.25);
 `;
 
 const BaseBtn = styled.span`
-    color: var(--subTextColor);
+    color: var(--mainColor);
     font-size: 1.5rem;
     font-weight: bold;
     padding: 0 5rem;
@@ -22,14 +27,15 @@ const BaseBtn = styled.span`
 const LinkBtn = styled(BaseBtn)``;
 
 const LoginBtn = styled(BaseBtn)`
-    border: 4px solid var(--subTextColor);
+    border: 4px solid #AE4F4D;
     border-radius: 5px;
-    padding: 26px 50px;
-    height: 81px;
-    margin-right: 20px;
+
+    padding: 1.62rem 3.12rem;
+    height: 5rem;
+    margin-right: 1.25rem;
 `;
 const LogoImage = styled.img`
-    height: 29px;
+    height: 1.8rem;
     width: auto;
     padding-left: 2rem;
 `
