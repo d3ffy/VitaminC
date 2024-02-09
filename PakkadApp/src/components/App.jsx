@@ -1,14 +1,10 @@
 import React from "react";
 import { GlobalStyle } from "./GlobalStyles";
-
-import HeaderMenu from "./HeaderMenu";
-import RealtimeDB from "./RealtimeDB";
-import FirestoreDB from "./FirestoreDB.jsx";
+import {  Routes , Route } from 'react-router-dom';
 
 import Login from "./Login.jsx";
-import Infomation from "./Infomation.jsx";
+import History from "./History.jsx";
 import Main from "./Main.jsx";
-import {  Routes , Route } from 'react-router-dom';
 
 function App(){
     return(
@@ -18,7 +14,7 @@ function App(){
         <Routes>
             <Route exact path="/" element={<Main/>}/>
             <Route exact path="/login" element={<Login/>}/>
-            <Route exact path="/infomation" element={<Infomation/>}/>
+            <Route exact path="/history" element={<History/>}/>
         </Routes>
         </>
     );

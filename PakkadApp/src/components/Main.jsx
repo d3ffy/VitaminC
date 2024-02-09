@@ -1,19 +1,25 @@
-import React from "react";
-import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
 
 import HeaderMenu from "./HeaderMenu";
 import RealtimeDB from "./RealtimeDB";
 import FirestoreDB from "./FirestoreDB.jsx";
+import CheckNpkContainer from "./CheckNpkContainer";
 
 
 const Main = () => {
+    const [isLogin , setIsLogin] = useState(false);
+
+    const toggleLogin = () => {
+        setIsLogin(!isLogin);
+    }
+
     return(
         <>
-            <HeaderMenu />
+            <HeaderMenu isLogin={isLogin}/>
             <RealtimeDB/>
             <FirestoreDB/>
-            <Link to="/login">Routing Test</Link>
+            <button onClick={toggleLogin}>Click to Login and Logout[Test]</button>
+            <CheckNpkContainer/>
         </>
     )
 }

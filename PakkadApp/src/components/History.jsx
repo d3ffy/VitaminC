@@ -9,7 +9,7 @@ const Container = styled.div`
     height: 125px;
 `;
 
-const  Infomation = () => {
+const  History = () => {
     return(
         <div>
             Login
@@ -17,4 +17,4 @@ const  Infomation = () => {
     )
 }
 
-export default Infomation;
+export default History;

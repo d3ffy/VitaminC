@@ -1,6 +1,7 @@
 import React from "react";
 import PAKKAD from '../image/PAKKAD1.png';
 import styled from 'styled-components';
+import { Link } from "react-router-dom"; 
 
 const Container = styled.div`
     position: fixed;
@@ -8,7 +9,7 @@ const Container = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 7.8rem;
+    height: 10vh;
     width: 100%;
     top: 0px;
     z-index: 100;
@@ -24,14 +25,14 @@ const BaseBtn = styled.span`
     display: flex;
     align-items: center;
 `
-const LinkBtn = styled(BaseBtn)``;
-
+const LinkBtn = styled(BaseBtn)`
+`;
 const LoginBtn = styled(BaseBtn)`
-    border: 4px solid #AE4F4D;
+    border: 0.5vh solid #AE4F4D;
     border-radius: 5px;
 
-    padding: 1.62rem 3.12rem;
-    height: 5rem;
+    padding: 1.62rem 2rem;
+    height: 1vh;
     margin-right: 1.25rem;
 `;
 const LogoImage = styled.img`
@@ -39,22 +40,29 @@ const LogoImage = styled.img`
     width: auto;
     padding-left: 2rem;
 `
-
-
 const BtnContainer = styled.div`
     height: 100%;
     align-items: center;
     display: flex;
 `
+const StyledLink = styled(Link)`
+    text-decoration: none;
+    color: white;
+`;
 
-const HeaderMenu = () => {
+const HeaderMenu = ({isLogin}) => {
+
     return(
         <Container>
             <LogoImage src={PAKKAD} alt="PAKKAD LOGO" />
             <BtnContainer>
-                <LinkBtn>HOME</LinkBtn>
+                <StyledLink to="/"><LinkBtn>HOME</LinkBtn></StyledLink>
                 <LinkBtn>HISTORY</LinkBtn>
-                <LoginBtn>LOGIN</LoginBtn>
+                {isLogin ? (
+                    <StyledLink to="/"><LinkBtn>PROFILE</LinkBtn></StyledLink>
+                ) : (
+                    <StyledLink to="/login"><LoginBtn>LOGIN</LoginBtn></StyledLink>
+                )}
             </BtnContainer>
         </Container>
     )

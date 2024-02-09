@@ -7,7 +7,7 @@ import HeaderMenu from "./HeaderMenu";
 
 const Container = styled.div`
     position: absolute;
-    padding-top: 7.8rem;;
+    padding-top: 10vh;
     top: 0px;
     background-color: #F1F3F6;
     width: 100vw;
@@ -26,7 +26,7 @@ const Card = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 5% 5% 10% 5%;
+    padding: 5% 3% 10% 3%;
 `;
 const InputIcon = styled.img`
     height: 34px;
