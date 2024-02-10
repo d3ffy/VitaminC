@@ -7,5 +7,6 @@ export const GlobalStyle = createGlobalStyle`
         --subColor: #F1F3F6;
         --mainTextColor: #000000;
         --subTextColor: #FFFFFF;
+        
     }
 `

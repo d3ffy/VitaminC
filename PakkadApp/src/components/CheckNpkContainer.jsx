@@ -21,7 +21,8 @@ const PlotSelectTitle = styled.div`
 `;
 const InputContainer = styled.div`
     position: relative;
-    width: 40%;
+    max-width: 40%;
+    min-width: 32%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -65,7 +66,7 @@ const LoginSpan = styled(Span)`
 `
 const NPKContainer = styled.div`
     min-width: max-content;
-    width: 40%;
+    max-width: 40%;
 `
 const NPKCard = styled.div`
     display: flex;
@@ -138,6 +139,7 @@ const  CheckNpkContainer = () => {
                 <AddNpkBtn>บันทึกค่า NPK</AddNpkBtn>
                 <div><LoginSpan>LOGIN</LoginSpan><Span>  เพื่อบันทึกค่า</Span></div>
             </InputContainer>
+
             <NPKContainer>
                 {npkValue.map((valueData, index) => (
                     <NPKCard key={index}>
