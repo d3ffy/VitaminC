@@ -63,7 +63,7 @@ const  PlotList = () => {
 
     return(
         <>
-            <HeaderMenu />
+            <HeaderMenu/>
             <Container>
                 {plotDB.map((plot, index) => (
                     <Box key={index}>

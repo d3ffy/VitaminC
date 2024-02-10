@@ -93,7 +93,7 @@ const HeaderMenu = ({isLogin}) => {
             <LogoImage src={PAKKAD} alt="PAKKAD LOGO" />
             <BtnContainer>
                 <StyledLink to="/"><LinkBtn>HOME</LinkBtn></StyledLink>
-                <LinkBtn>HISTORY</LinkBtn>
+                <StyledLink to="/history"><LinkBtn>HISTORY</LinkBtn></StyledLink>
                 {isLogin ? (
                     <>
                         <DropdownContainer>
