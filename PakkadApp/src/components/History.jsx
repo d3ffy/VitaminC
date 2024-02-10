@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import HeaderMenu from "./HeaderMenu";
-import BadValue from "../image/goodValue.png";
+import BadValue from "../image/badValue.png";
+import goodValue from "../image/goodValue.png";
 import pencil from "../image/pencil.png";
 
 const SearchBoxContainer = styled.div`
@@ -94,6 +95,8 @@ const RightContainer = styled.div`
     flex-direction: column;
     margin: 0 auto;
     margin-top: 7vh;
+    min-width: max-content;
+    width: 70.19vw;
 `;
 const PlotInformation = styled.div`
     display: flex;
@@ -148,6 +151,29 @@ const ImageContainer = styled.div`
 `;
 const PlotHistory = styled.div`
     display: flex;
+    margin-top: 4.74vh;
+`;
+const TableContainer = styled.div`
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0px;
+    width: 100%;
+`;
+const TableCell = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    height: 7.6vh;
+    background-color: ${(props) => (props.isOdd ? '#F1F3F6' : '#ffffff')};
+`;
+const TableHead = styled(TableCell)`
+    background-color: #CCE2D2;
+    position: relative;
+`;
+const StatusImg = styled.img`
+    width: 2.5vh;
+    height: 2.5vh;
 `;
 
 const RightHistoryBar = () => {
@@ -174,6 +200,12 @@ const RightHistoryBar = () => {
     const handleSensorChange = (event) => {
         setSelectSensor(event.target.value);
     };
+
+    // เก็บค่า ประวัติ NPK
+  const [rows, setRows] = useState([
+    ['03/10/24', '20', '20', '20', 'N , K ไม่เหมาะสม', <StatusImg src={BadValue}></StatusImg>],
+    ['03/10/24', '20', '20', '20', 'N , K ไม่เหมาะสม', <StatusImg src={goodValue}></StatusImg>],
+  ]);
     
     
     return(
@@ -215,8 +247,24 @@ const RightHistoryBar = () => {
                     </PlotDetail>
                 </PlotInformation>
 
+
+
                 <PlotHistory>
-                    ตาราง
+                <TableContainer>
+                    <TableHead >Date</TableHead>
+                    <TableHead >N</TableHead>
+                    <TableHead >P</TableHead>
+                    <TableHead >K</TableHead>
+                    <TableHead >ความเหมาะสม</TableHead>
+                    <TableHead ></TableHead>
+                    {rows.map((row, rowIndex) => (
+                        <React.Fragment key={rowIndex}>
+                        {row.map((cellData, colIndex) => (
+                            <TableCell key={colIndex} isOdd={rowIndex % 2 !== 0}>{cellData}</TableCell>
+                        ))}
+                        </React.Fragment>
+                    ))}
+                </TableContainer>
                 </PlotHistory>
             </RightContainer>
         </>
