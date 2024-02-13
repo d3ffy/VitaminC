@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from 'styled-components';
 import userImg from '../image/user 1.png';
 import padlockImg from '../image/padlock 1.png';
 
 import HeaderMenu from "./HeaderMenu";
+
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom'
 
 const Container = styled.div`
     position: absolute;
@@ -69,9 +72,28 @@ const SingupSpan = styled.span`
     color: #818181;
 `;
 
-
-
 const Login = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const auth = getAuth();
+    let navigate = useNavigate(); 
+
+    const handleLogin = () => {
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const loggedInUser = userCredential.user;
+          alert(`You have logged in with ${loggedInUser.email}`);
+          console.log(loggedInUser);
+          navigate('/')
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          alert('Incorrect Username or Password!');
+          console.error('Login error:', errorCode, errorMessage);
+        });
+    };
+
     return(
         <>
         <HeaderMenu />
@@ -79,13 +101,14 @@ const Login = () => {
             <Card>
                 <Title>LOGIN</Title>
                 <FormContainer>
-                    <InputLabel>USERNAM</InputLabel>
+                    <InputLabel>USERNAME</InputLabel>
                     <InputBox>
                         <InputIcon src={userImg}></InputIcon>
                         <input
                             type="text"
                             defaultValue="password"
                             className="custom-input"
+                            onChange={(e) => setEmail(e.target.value)}
                         />
                     </InputBox>
 
@@ -95,12 +118,12 @@ const Login = () => {
                         <input
                             type="password"
                             defaultValue="password"
-                            onChange={(e) => console.log(e.target.value)}
+                            onChange={(e) => setPassword(e.target.value)}
                             className="custom-input"
                         />
                     </InputBox>
                 </FormContainer>
-                <LoginBtn type="button" >Login</LoginBtn>
+                <LoginBtn type="button" onClick={handleLogin}>Login</LoginBtn>
                 <SingupSpan>OR Sign Up</SingupSpan>
             </Card>
         </Container>

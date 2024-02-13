@@ -13,7 +13,7 @@ const FirestoreDB = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [users, setUsers] = useState([]);
-  var wasFetch = false;
+  const [wasFetch, setWasFetch] = useState(false);
 
   useEffect(() => {
     // Fetch data from Firestore when the component mounts
@@ -25,7 +25,7 @@ const FirestoreDB = () => {
           setUsers(userData);
 
           // Control over fetching
-          wasFetch = true;
+          setWasFetch(true);
         }
       } catch (error) {
         console.error('Error fetching documents: ', error.message);

@@ -1,27 +1,23 @@
-import React, { useState } from "react";
+import React from "react";
 
 import HeaderMenu from "./HeaderMenu";
 import RealtimeDB from "./RealtimeDB";
 import FirestoreDB from "./FirestoreDB.jsx";
 import CheckNpkContainer from "./CheckNpkContainer";
-    
 
+import { useAuth } from "./AuthContext.jsx";
 const Main = () => {
-    const [isLogin , setIsLogin] = useState(false);
-
-    const toggleLogin = () => {
-        setIsLogin(!isLogin);
-
-    }
+    const { user } = useAuth()
     return(
         <>
-            <HeaderMenu isLogin={isLogin}/>
-            
+            <HeaderMenu isLogin={user != null}/>           
             <RealtimeDB/>
             <FirestoreDB/>
-            <button onClick={toggleLogin}>Click to Login and Logout[Test]</button>
 
-            <CheckNpkContainer/>
+            {user ? (
+                <p>Welcome {user.email} !</p>
+            ) : <p>You're not login</p>}
+            <CheckNpkContainer/>      
         </>
     )
 }
