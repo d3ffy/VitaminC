@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import GoodImg from '../image/goodValue.png';
 import BadImg from '../image/badValue.png';
 
+import { useAuth } from "./AuthContext.jsx";
+
 const Container = styled.div`
     width: 95%;
     margin: 0 auto;
@@ -107,6 +109,7 @@ const ValueImg = styled.img`
 
 
 const  CheckNpkContainer = () => {
+    const { user } = useAuth()
     // เอาชื่อแปลงผักจาก database มาแทน
     // setPlotList ตอน database มีการอัปเดคเว็บจะได้อัปเดตข้อมูลตาม
     const [plotList , setPlotList] = useState(
@@ -124,6 +127,13 @@ const  CheckNpkContainer = () => {
         {valueType: "Phosphoru", subValueType: "P", value: 22 ,status : BadImg},
         {valueType: "Potassium", subValueType: "K", value: 324.2 ,status : GoodImg},
     ]
+
+    const recordData  = () => {
+        console.log("recorded");
+    };
+    const loginAlert  = () => {
+        alert('You must login before record data!!!')
+    };
     return(
         <Container>
             <InputContainer>
@@ -136,7 +146,9 @@ const  CheckNpkContainer = () => {
                     ))}
                 </PlotSelect>
                 <CheckNpkBtn>ตรวจค่า NPK</CheckNpkBtn>
-                <AddNpkBtn>บันทึกค่า NPK</AddNpkBtn>
+                { user != null 
+                ? <AddNpkBtn onClick={recordData}>บันทึกค่า NPK</AddNpkBtn>
+                : <AddNpkBtn onClick={loginAlert}>บันทึกค่า NPK</AddNpkBtn>}
                 <div><LoginSpan>LOGIN</LoginSpan><Span>  เพื่อบันทึกค่า</Span></div>
             </InputContainer>
 

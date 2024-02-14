@@ -7,7 +7,7 @@ import HeaderMenu from "./HeaderMenu";
 
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom'
-import { Link } from "react-router-dom";
+
 
 const Container = styled.div`
     position: absolute;
@@ -67,15 +67,16 @@ const LoginBtn = styled.button`
     background-color: var(--mainColor);
     margin-top: 40px;
 `;
-const SingupSpan = styled(Link)`
+const SingupSpan = styled.span`
     margin-top: 15px;
     font-size: 14px;
     color: #818181;
 `;
 
-const Login = () => {
+const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const auth = getAuth();
     let navigate = useNavigate(); 
 
@@ -100,7 +101,7 @@ const Login = () => {
         <HeaderMenu />
         <Container>  
             <Card>
-                <Title>LOGIN</Title>
+                <Title>REGISTER</Title>
                 <FormContainer>
                     <InputLabel>USERNAME</InputLabel>
                     <InputBox>
@@ -112,7 +113,7 @@ const Login = () => {
                             onChange={(e) => setEmail(e.target.value)}
                         />
                     </InputBox>
-
+                    <br></br>
                     <InputLabel>PASSWORD</InputLabel>
                     <InputBox>
                         <InputIcon src={padlockImg}></InputIcon>
@@ -123,13 +124,23 @@ const Login = () => {
                             className="custom-input"
                         />
                     </InputBox>
+
+                    <InputLabel>CONFIRM PASSWORD</InputLabel>
+                    <InputBox>
+                        <InputIcon src={padlockImg}></InputIcon>
+                        <input
+                            placeholder="CONFIRM PASSWORD"
+                            type="confirmPassword"
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="custom-input"
+                        />
+                    </InputBox>
                 </FormContainer>
-                <LoginBtn type="button" onClick={handleLogin}>Login</LoginBtn>
-                <SingupSpan to="/register">OR Sign Up</SingupSpan>
+                <LoginBtn type="button" onClick={handleLogin}>Register</LoginBtn>
             </Card>
         </Container>
         </>
     )
 }
 
-export default Login;
+export default Register;

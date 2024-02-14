@@ -117,7 +117,7 @@ const HeaderMenu = ({isLogin}) => {
                             <StyledLink to="/"><LinkBtn>PROFILE</LinkBtn></StyledLink>
                             <DropdownMenu>
                                 <StyledLink to="/"><DropDownBtn><DropDownImg src={userDropDown}></DropDownImg>Username</DropDownBtn></StyledLink>
-                                <StyledLink to="/plotlist"><DropDownBtn><DropDownImg src={settingDropDown}></DropDownImg>Setting</DropDownBtn></StyledLink>
+                                <StyledLink to="/"><DropDownBtn><DropDownImg src={settingDropDown}></DropDownImg>Setting</DropDownBtn></StyledLink>
                                 <StyledLink to="/"><DropDownBtn onClick={handleLogout}><DropDownImg src={logoutDropDown}></DropDownImg>Log Out</DropDownBtn></StyledLink>
                             </DropdownMenu>
                         </DropdownContainer>

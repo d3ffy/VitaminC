@@ -5,8 +5,9 @@ import {  Routes , Route } from 'react-router-dom';
 import Login from "./Login.jsx";
 import History from "./History.jsx";
 import Main from "./Main.jsx";
-import PlotList from "./PlotList";
+import Register from "./Register.jsx";
 import { AuthProvider } from "./AuthContext.jsx";
+
 
 function App(){
     return(
@@ -18,7 +19,7 @@ function App(){
                 <Route exact path="/" element={<Main/>}/>
                 <Route exact path="/login" element={<Login/>}/>
                 <Route exact path="/history" element={<History/>}/>
-                <Route exact path="/plotlist" element={<PlotList/>}/>
+                <Route exact path="/register" element={<Register/>}/>
             </Routes>
         </AuthProvider>
         </>
