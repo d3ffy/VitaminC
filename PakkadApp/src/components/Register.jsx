@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import styled from 'styled-components';
 import userImg from '../image/user 1.png';
 import padlockImg from '../image/padlock 1.png';
-
 import HeaderMenu from "./HeaderMenu";
 
-import { getAuth , createUserWithEmailAndPassword} from 'firebase/auth';
 import { useNavigate } from 'react-router-dom'
+import { getAuth } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import {addUserToFirestore } from './FirestoreDB.jsx'
 
 
 const Container = styled.div`
@@ -67,35 +68,32 @@ const LoginBtn = styled.button`
     background-color: var(--mainColor);
     margin-top: 40px;
 `;
-// const SingupSpan = styled.span`
-//     margin-top: 15px;
-//     font-size: 14px;
-//     color: #818181;
-// `;
 
 const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    // const auth = getAuth();
     let navigate = useNavigate(); 
 
-    const handleRegister = async() => {
+    const handleRegister = async () => {
         const auth = getAuth();
+
         try {
-            if(password === confirmPassword){
-                await auth.createUserWithEmailAndPassword(email, password);
+            if (password === confirmPassword) {
+                await createUserWithEmailAndPassword(auth, email, password);
+                await addUserToFirestore(email);
+                setEmail('');
+                setPassword('');
+                setConfirmPassword('');
+                navigate('/');
+            } else {
+                alert("somthing went wrong , password should be at least 6 characters");
+                
             }
-            else{
-                alert("เกิดข้อผิดพลาดในการลงทะเบียน กรุณาตรวจสอบข้อมูล")
-            }
-        
-            navigate('/login');
-          } catch (error) {
+            } catch (error) {
             console.error(error);
-            alert('เกิดข้อผิดพลาดในการลงทะเบียน กรุณาตรวจสอบข้อมูล');
-          }
-    };
+            }
+  };
 
     return(
         <>
@@ -131,7 +129,7 @@ const Register = () => {
                         <InputIcon src={padlockImg}></InputIcon>
                         <input
                             placeholder="CONFIRM PASSWORD"
-                            type="confirmPassword"
+                            type="password"
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             className="custom-input"
                         />

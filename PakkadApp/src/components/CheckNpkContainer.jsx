@@ -2,7 +2,7 @@ import React , { useState , useEffect } from "react";
 import styled from 'styled-components';
 import GoodImg from '../image/goodValue.png';
 import BadImg from '../image/badValue.png';
-import { getPlotData } from "./FirestoreDB.jsx";
+import { GetPlotData } from "./FirestoreDB.jsx";
 import RealtimeDB from "./RealtimeDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
@@ -114,20 +114,22 @@ const  CheckNpkContainer = () => {
     const { user } = useAuth()
 
     const [plotList , setPlotList] = useState([]);
+
     useEffect(() => {
         const getPlotNames = async () => {
-          const plots = await getPlotData();
-          const plotnames = plots.map((plot) => plot.garden_name);
-          setPlotList(plotnames);
+            if (user) {
+                const plots = await GetPlotData(user.email);
+                const plotnames = plots.map((plot) => plot);
+                setPlotList(plotnames);
+              }
         };
         getPlotNames();
-    }, []);
+    }, [user]);
 
     const [selectPlot, setSelectedPlot] = useState('');
     const handlePlotChange = (event) => {
         setSelectedPlot(event.target.value);
     };
-
     
     const { readingRed, readingGreen, readingBlue } = RealtimeDB();
     const [RgbToNPK, setRgbToNPK] = useState({

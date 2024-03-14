@@ -13,7 +13,6 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
     });
 
-    // Clean up the subscription when the component unmounts
     return () => unsubscribe();
   }, [auth]);
 
@@ -27,3 +26,4 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   return useContext(AuthContext);
 };
+

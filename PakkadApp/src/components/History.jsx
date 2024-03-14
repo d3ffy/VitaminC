@@ -4,7 +4,7 @@ import HeaderMenu from "./HeaderMenu";
 import BadValue from "../image/badValue.png";
 import goodValue from "../image/goodValue.png";
 import pencil from "../image/pencil.png";
-import { getSensorNames , getPlantData , getPlotData} from "./FirestoreDB.jsx";
+import { GetSensorNames , getPlantData , GetPlotData } from "./FirestoreDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
 import { Link } from 'react-router-dom';
@@ -66,15 +66,19 @@ const LeftHistoryBar = () => {
       };
 
     // State สำหรับ list plot
+    const { user } = useAuth()
+
     const [nameList , setNameList] = useState([]);
     useEffect(() => {
         const getPlotNames = async () => {
-          const plots = await getPlotData();
-          const plotnames = plots.map((plot) => plot.garden_name);
-          setNameList(plotnames);
+            if (user) {
+                const plots = await GetPlotData(user.email);
+                const plotnames = plots.map((plot) => plot);
+                setNameList(plotnames);
+              }
         };
         getPlotNames();
-    }, []);
+    }, [user]);
 
   // ฟังก์ชั่นเพื่อกรองรายการตามคำค้นหา
   const filteredList = nameList.filter(plot =>
@@ -189,7 +193,7 @@ const AddPlotBox = () => {
         []
     );
     useEffect(() => {
-        getSensorNames().then((names) => setSensorList(names));
+        GetSensorNames().then((names) => setSensorList(names));
       }, []);
     const [selectSensor, setSelectSensor] = useState('');
     const handleSensorChange = (event) => {
@@ -352,7 +356,7 @@ const RightHistoryBar = () => {
         []
     );
     useEffect(() => {
-        getSensorNames().then((names) => setSensorList(names));
+        GetSensorNames().then((names) => setSensorList(names));
       }, []);
     const [selectSensor, setSelectSensor] = useState('');
     const handleSensorChange = (event) => {

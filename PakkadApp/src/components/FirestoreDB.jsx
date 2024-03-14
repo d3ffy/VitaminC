@@ -1,8 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import firebaseApp from '../firebase.js';
-import { getFirestore, collection, addDoc, getDocs , doc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs , doc} from 'firebase/firestore';
+import { useAuth  } from "./AuthContext.jsx";
 
-export const getSensorNames = async () => {
+
+export const GetUserEmail = () => {
+  const { user } = useAuth();
+  const [userEmail, setUserEmail] = useState(null);
+  useEffect(() => {
+    const fetchUserEmail = () => {
+      if (user) {
+        setUserEmail(user.email);
+        
+        // console.log('User email:', user.email);
+      }
+    };
+    fetchUserEmail();
+  }, [user]);
+
+  return userEmail;
+};
+
+export const GetUserDocumentId = async (userEmail) => {
+  const firestoreDB = getFirestore(firebaseApp);
+  const userCollection = collection(firestoreDB, "user_DB");
+
+  if (userEmail) {
+    const querySnapshot = await getDocs(userCollection);
+    for (const doc of querySnapshot.docs) {
+      if (doc.data().email === userEmail) {
+        return doc.id;
+      }
+    }
+  }
+
+  return null;
+};
+
+export const GetSensorNames = async () => {
   try{
     const firestoreDB = getFirestore(firebaseApp);
     const sensorCollection = collection(firestoreDB, 'sensor_DB');
@@ -18,24 +53,35 @@ export const getSensorNames = async () => {
     catch(error){
       console.error("Error fetching sensor names:", error);
     };
-}
+};
 
-export const getPlotData = async () => {
-  try {
-    const firestoreDB = getFirestore(firebaseApp);
-    const plotCollection = collection(firestoreDB, "plot_DB");
-    const querySnapshot = await getDocs(plotCollection);
+export const GetPlotData = async (userEmail) => {
+  var userDocumentId = await GetUserDocumentId(userEmail);
 
-    const plotData = [];
-    querySnapshot.forEach((doc) => {
-      const plot = doc.data();
-      plot.id = doc.id;
-      plotData.push(plot);
-    });
+  if (userDocumentId) {
+    try {
+      const firestoreDB = getFirestore(firebaseApp);
+      const userDocRef = doc(firestoreDB, "user_DB", userDocumentId);
+      const plotCollection = collection(userDocRef, "plot_DB");
+      const querySnapshot = await getDocs(plotCollection);
 
-    return plotData;
-  } catch (error) {
-    console.error("Error fetching plot data:", error);
+      const plotData = [];
+      querySnapshot.forEach((doc) => {
+        const plot = doc.data();
+        plot.id = doc.id;
+        plotData.push(plot.garden_name);
+      });
+
+      // console.log(plotData);
+      // console.log(userDocumentId);
+      return plotData;
+    } catch (error) {
+      console.error("Error fetching plot data:", error);
+      return [];
+    }
+  } else {
+    console.log("User document ID is not available yet.");
+    
     return [];
   }
 };
@@ -60,6 +106,26 @@ export const getPlantData = async () => {
   }
 };
 
+export const addUserToFirestore = async (email) => {
+  const firestoreDB = getFirestore(firebaseApp);
+  const userCollection = collection(firestoreDB, "user_DB");
+
+  // ตั้งค่าข้อมูล email 
+  const data = {
+    email: email,
+  };
+  // สร้าง document
+  const docRef =await addDoc(userCollection, data);
+
+  // สร้าง subcollection ใหม่
+  const subcollectionRef = collection(docRef, "plot_DB");
+
+  // เพิ่ม document ใหม่ใน subcollection
+  await addDoc(subcollectionRef, {
+    garden_name: "ผักคอสแปลงที่1",
+    data: "docdata",
+  });
+};
 
 const FirestoreDB = () => {
   // Initialize Firestore from Firebase
