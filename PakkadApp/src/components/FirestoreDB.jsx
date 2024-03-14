@@ -1,6 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import firebaseApp from '../firebase.js';
-import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs , doc } from 'firebase/firestore';
+
+export const getSensorNames = async () => {
+  try{
+    const firestoreDB = getFirestore(firebaseApp);
+    const sensorCollection = collection(firestoreDB, 'sensor_DB');
+    const sensorNames = [];
+    const querySnapshot = await getDocs(sensorCollection);
+    querySnapshot.forEach((doc) => {
+      const sensorName = doc.data().sensor_name;
+      sensorNames.push(sensorName);
+    });
+
+    return sensorNames;
+  }
+    catch(error){
+      console.error("Error fetching sensor names:", error);
+    };
+}
+
+export const getPlotData = async () => {
+  try {
+    const firestoreDB = getFirestore(firebaseApp);
+    const plotCollection = collection(firestoreDB, "plot_DB");
+    const querySnapshot = await getDocs(plotCollection);
+
+    const plotData = [];
+    querySnapshot.forEach((doc) => {
+      const plot = doc.data();
+      plot.id = doc.id;
+      plotData.push(plot);
+    });
+
+    return plotData;
+  } catch (error) {
+    console.error("Error fetching plot data:", error);
+    return [];
+  }
+};
+
+export const getPlantData = async () => {
+  try {
+    const firestoreDB = getFirestore(firebaseApp);
+    const plantCollection = collection(firestoreDB, "plant_DB");
+    const querySnapshot = await getDocs(plantCollection);
+    const plantData = [];
+    querySnapshot.forEach((doc) => {
+      const plant = doc.data();
+      plant.id = doc.id;
+      plantData.push(plant);
+
+    });
+
+    return plantData ;
+  } catch (error) {
+    console.error("Error fetching plot data:", error);
+    return [];
+  }
+};
+
 
 const FirestoreDB = () => {
   // Initialize Firestore from Firebase
@@ -56,6 +115,7 @@ const FirestoreDB = () => {
       console.error('Error adding document: ', error.message);
     }
   }
+
 
   return (
     <div>

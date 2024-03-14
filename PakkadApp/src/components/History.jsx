@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import styled from 'styled-components';
 import HeaderMenu from "./HeaderMenu";
 import BadValue from "../image/badValue.png";
 import goodValue from "../image/goodValue.png";
 import pencil from "../image/pencil.png";
+import { getSensorNames , getPlantData , getPlotData} from "./FirestoreDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
 import { Link } from 'react-router-dom';
@@ -59,23 +60,25 @@ const LeftHistoryBar = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     // State plot ที่กำลังเปิดอยู่
-    const [viewingPlot, setViewingPlot] = useState('1dknhaw9ql1');
+    const [viewingPlot, setViewingPlot] = useState(0);
     const handleClick = (id) => {
         setViewingPlot(id);
       };
 
     // State สำหรับ list plot
-  const [nameList, setNameList] = useState([
-    {name: 'แปลงผักกาด1', id: '1dknhaw9ql1'},
-    {name: 'แปลงผักกาด2', id: '2dknhaw9ql1'},
-    {name: 'แปลงผักกาด3', id: '3dknhaw9ql1'},
-    {name: 'แปลงผักกาด4', id: '5dknhaw9ql1'},
-    {name: 'แปลงผักกาด5', id: '6dknhaw9ql1'},
-  ]);
-    
+    const [nameList , setNameList] = useState([]);
+    useEffect(() => {
+        const getPlotNames = async () => {
+          const plots = await getPlotData();
+          const plotnames = plots.map((plot) => plot.garden_name);
+          setNameList(plotnames);
+        };
+        getPlotNames();
+    }, []);
+
   // ฟังก์ชั่นเพื่อกรองรายการตามคำค้นหา
   const filteredList = nameList.filter(plot =>
-    plot.name.toLowerCase().includes(searchTerm.toLowerCase())
+    plot.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const [showAddPlotBox , setShowAddPlotBox] = useState(false);
@@ -97,14 +100,15 @@ const LeftHistoryBar = () => {
                 
 
                 {filteredList.map((plot, index ) => ( 
-                    plot.id === viewingPlot ? (
-                    <PlotSectionViewing onClick={() => handleClick(plot.id)} key={index}>{plot.name}</PlotSectionViewing>
+                    index === viewingPlot ? (
+                    <PlotSectionViewing onClick={() => handleClick(index)} key={index}>{plot}</PlotSectionViewing>
                 ) : (
-                    <PlotSection onClick={() => handleClick(plot.id)} key={index}>{plot.name}</PlotSection>)
+                    <PlotSection onClick={() => handleClick(index)} key={index}>{plot}</PlotSection>)
                 ))}
             </SearchBoxContainer>
             {showAddPlotBox ? <><AddPlotBG onClick={showPlotBox}></AddPlotBG>
-                                    <AddPlotBox /></>: ""}
+                                <AddPlotBox />
+                                </>: ""}
         </>
     )
 }
@@ -179,10 +183,14 @@ const SelectBox = styled.select`
     padding: 10px 0 10px 0px;
 `;
 
+// POPUP เพิ่มแปลงผัก
 const AddPlotBox = () => {
     const [sensorList , setSensorList] = useState(
-        ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France']
+        []
     );
+    useEffect(() => {
+        getSensorNames().then((names) => setSensorList(names));
+      }, []);
     const [selectSensor, setSelectSensor] = useState('');
     const handleSensorChange = (event) => {
         setSelectSensor(event.target.value);
@@ -293,7 +301,7 @@ const TableCell = styled.div`
     align-items: center;
     padding: 8px;
     height: 7.6vh;
-    background-color: ${(props) => (props.isOdd ? '#F1F3F6' : '#ffffff')};
+    background-color: ${(props) => (props.$isodd === `true` ? '#F1F3F6' : '#ffffff')};
 `;
 const TableHead = styled(TableCell)`
     background-color: #CCE2D2;
@@ -325,9 +333,15 @@ const RightHistoryBar = () => {
       };
 
     // เก็บค่า type
-    const [typeList , setTypeList] = useState(
-        ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France']
-    );
+    const [typeList , setTypeList] = useState([]);
+    useEffect(() => {
+        const getPlantNames = async () => {
+          const plants = await getPlantData();
+          const plotnames = plants.map((plant) => plant.name);
+          setTypeList(plotnames);
+        };
+        getPlantNames();
+    }, []);
     const [selectType, setSelectType] = useState('');
     const handleTypeChange = (event) => {
         setSelectType(event.target.value);
@@ -335,8 +349,11 @@ const RightHistoryBar = () => {
 
     // เก็บค่า sensor
     const [sensorList , setSensorList] = useState(
-        ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France']
+        []
     );
+    useEffect(() => {
+        getSensorNames().then((names) => setSensorList(names));
+      }, []);
     const [selectSensor, setSelectSensor] = useState('');
     const handleSensorChange = (event) => {
         setSelectSensor(event.target.value);
@@ -403,7 +420,7 @@ const RightHistoryBar = () => {
                     {rows.map((row, rowIndex) => (
                         <React.Fragment key={rowIndex}>
                         {row.map((cellData, colIndex) => (
-                            <TableCell key={colIndex} isOdd={rowIndex % 2 !== 0}>{cellData}</TableCell>
+                            <TableCell key={colIndex} $isodd={rowIndex % 2 !== 0 ? `true` : `false`}>{cellData}</TableCell>
                         ))}
                         </React.Fragment>
                     ))}

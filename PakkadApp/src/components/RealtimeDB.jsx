@@ -20,31 +20,53 @@ const RealtimeDB = () => {
     const [readingBlue, setReadingBlue] = useState(null);
 
     // Realtime Update Value red, green and blue
+    // useEffect(() => {
+    //     onValue(realtimeDBRefRed, (snapshot) => {
+    //         const data = snapshot.val();
+    //         setReadingRed(data);
+    //     });
+
+    //     onValue(realtimeDBRefGreen, (snapshot) => {
+    //         const data = snapshot.val();
+    //         setReadingGreen(data);
+    //     });
+
+    //     onValue(realtimeDBRefBlue, (snapshot) => {
+    //         const data = snapshot.val();
+    //         setReadingBlue(data);
+    //     });
+
+    // })
+
     useEffect(() => {
-        onValue(realtimeDBRefRed, (snapshot) => {
-            const data = snapshot.val();
-            setReadingRed(data);
+        const unsubscribeRed = onValue(realtimeDBRefRed, (snapshot) => {
+          const data = snapshot.val();
+          setReadingRed(data);
         });
-
-        onValue(realtimeDBRefGreen, (snapshot) => {
-            const data = snapshot.val();
-            setReadingGreen(data);
+    
+        const unsubscribeGreen = onValue(realtimeDBRefGreen, (snapshot) => {
+          const data = snapshot.val();
+          setReadingGreen(data);
         });
-
-        onValue(realtimeDBRefBlue, (snapshot) => {
-            const data = snapshot.val();
-            setReadingBlue(data);
+    
+        const unsubscribeBlue = onValue(realtimeDBRefBlue, (snapshot) => {
+          const data = snapshot.val();
+          setReadingBlue(data);
         });
-    })
+    
+        // Clean up function to prevent memory leaks
+        return () => {
+          unsubscribeRed();
+          unsubscribeGreen();
+          unsubscribeBlue();
+        };
+      }, []);
 
-    // Display HTML
-    return (
-        <div>
-          <p>Reading Red: <span id="reading-red">{readingRed}</span></p>
-          <p>Reading Green: <span id="reading-green">{readingGreen}</span></p>
-          <p>Reading Blue: <span id="reading-blue">{readingBlue}</span></p>
-        </div>
-    );
-}
+    return {
+        readingRed,
+        readingGreen,
+        readingBlue,
+      };
+};
 
 export default RealtimeDB;

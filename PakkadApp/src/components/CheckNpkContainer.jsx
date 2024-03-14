@@ -1,7 +1,9 @@
-import React , { useState } from "react";
+import React , { useState , useEffect } from "react";
 import styled from 'styled-components';
 import GoodImg from '../image/goodValue.png';
 import BadImg from '../image/badValue.png';
+import { getPlotData } from "./FirestoreDB.jsx";
+import RealtimeDB from "./RealtimeDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
 
@@ -110,22 +112,40 @@ const ValueImg = styled.img`
 
 const  CheckNpkContainer = () => {
     const { user } = useAuth()
-    // เอาชื่อแปลงผักจาก database มาแทน
-    // setPlotList ตอน database มีการอัปเดคเว็บจะได้อัปเดตข้อมูลตาม
-    const [plotList , setPlotList] = useState(
-        ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France']
-    );
-    const [selectPlot, setSelectedPlot] = useState('');
 
+    const [plotList , setPlotList] = useState([]);
+    useEffect(() => {
+        const getPlotNames = async () => {
+          const plots = await getPlotData();
+          const plotnames = plots.map((plot) => plot.garden_name);
+          setPlotList(plotnames);
+        };
+        getPlotNames();
+    }, []);
+
+    const [selectPlot, setSelectedPlot] = useState('');
     const handlePlotChange = (event) => {
         setSelectedPlot(event.target.value);
     };
 
-    // ดึงค่าจาก realtime database มาใส่ใน value: 20
+    
+    const { readingRed, readingGreen, readingBlue } = RealtimeDB();
+    const [RgbToNPK, setRgbToNPK] = useState({
+        NITROGEN: 0,
+        PHOSPHORUS: 0,
+        POTASSIUM: 0,
+    });
+    const updateNPK = () =>{
+        setRgbToNPK({
+            NITROGEN: readingRed,
+            PHOSPHORUS: readingGreen,
+            POTASSIUM: readingBlue,
+        });
+    }
     const npkValue =[ 
-        {valueType: "Nitrogen", subValueType: "N", value: 20 ,status : GoodImg},
-        {valueType: "Phosphoru", subValueType: "P", value: 22 ,status : BadImg},
-        {valueType: "Potassium", subValueType: "K", value: 324.2 ,status : GoodImg},
+        {valueType: "Nitrogen", subValueType: "N", value: RgbToNPK.NITROGEN ,status : GoodImg},
+        {valueType: "Phosphorus", subValueType: "P", value: RgbToNPK.PHOSPHORUS ,status : BadImg},
+        {valueType: "Potassium", subValueType: "K", value: RgbToNPK.POTASSIUM ,status : GoodImg},
     ]
 
     const recordData  = () => {
@@ -145,11 +165,13 @@ const  CheckNpkContainer = () => {
                     </option>
                     ))}
                 </PlotSelect>
-                <CheckNpkBtn>ตรวจค่า NPK</CheckNpkBtn>
+                <CheckNpkBtn onClick={updateNPK}>ตรวจค่า NPK</CheckNpkBtn>
                 { user != null 
                 ? <AddNpkBtn onClick={recordData}>บันทึกค่า NPK</AddNpkBtn>
                 : <AddNpkBtn onClick={loginAlert}>บันทึกค่า NPK</AddNpkBtn>}
-                <div><LoginSpan>LOGIN</LoginSpan><Span>  เพื่อบันทึกค่า</Span></div>
+                { user != null 
+                ? ""
+                :<div><LoginSpan>LOGIN</LoginSpan><Span>  เพื่อบันทึกค่า</Span></div>}
             </InputContainer>
 
             <NPKContainer>

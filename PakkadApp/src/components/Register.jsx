@@ -5,7 +5,7 @@ import padlockImg from '../image/padlock 1.png';
 
 import HeaderMenu from "./HeaderMenu";
 
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth , createUserWithEmailAndPassword} from 'firebase/auth';
 import { useNavigate } from 'react-router-dom'
 
 
@@ -67,33 +67,34 @@ const LoginBtn = styled.button`
     background-color: var(--mainColor);
     margin-top: 40px;
 `;
-const SingupSpan = styled.span`
-    margin-top: 15px;
-    font-size: 14px;
-    color: #818181;
-`;
+// const SingupSpan = styled.span`
+//     margin-top: 15px;
+//     font-size: 14px;
+//     color: #818181;
+// `;
 
 const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const auth = getAuth();
+    // const auth = getAuth();
     let navigate = useNavigate(); 
 
-    const handleLogin = () => {
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const loggedInUser = userCredential.user;
-          alert(`You have logged in with ${loggedInUser.email}`);
-          console.log(loggedInUser);
-          navigate('/')
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          alert('Incorrect Username or Password!');
-          console.error('Login error:', errorCode, errorMessage);
-        });
+    const handleRegister = async() => {
+        const auth = getAuth();
+        try {
+            if(password === confirmPassword){
+                await auth.createUserWithEmailAndPassword(email, password);
+            }
+            else{
+                alert("เกิดข้อผิดพลาดในการลงทะเบียน กรุณาตรวจสอบข้อมูล")
+            }
+        
+            navigate('/login');
+          } catch (error) {
+            console.error(error);
+            alert('เกิดข้อผิดพลาดในการลงทะเบียน กรุณาตรวจสอบข้อมูล');
+          }
     };
 
     return(
@@ -136,7 +137,7 @@ const Register = () => {
                         />
                     </InputBox>
                 </FormContainer>
-                <LoginBtn type="button" onClick={handleLogin}>Register</LoginBtn>
+                <LoginBtn type="button" onClick={handleRegister}>Register</LoginBtn>
             </Card>
         </Container>
         </>

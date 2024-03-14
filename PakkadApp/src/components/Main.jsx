@@ -1,7 +1,6 @@
 import React from "react";
 
 import HeaderMenu from "./HeaderMenu";
-import RealtimeDB from "./RealtimeDB";
 import FirestoreDB from "./FirestoreDB.jsx";
 import CheckNpkContainer from "./CheckNpkContainer";
 
@@ -11,7 +10,6 @@ const Main = () => {
     return(
         <>
             <HeaderMenu isLogin={user != null}/>           
-            <RealtimeDB/>
             <FirestoreDB/>
 
             {user ? (
