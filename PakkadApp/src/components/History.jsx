@@ -4,7 +4,7 @@ import HeaderMenu from "./HeaderMenu";
 import BadValue from "../image/badValue.png";
 import goodValue from "../image/goodValue.png";
 import pencil from "../image/pencil.png";
-import { GetSensorNames , getPlantData , GetPlotData } from "./FirestoreDB.jsx";
+import { GetSensorNames ,getPlantData ,GetPlotData ,addUserPlot ,GetPlotInfo, deletePlot, GetHistoryInfo} from "./FirestoreDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
 import { Link } from 'react-router-dom';
@@ -41,9 +41,7 @@ const PlotSection = styled.div`
     height: 5.38vh;
     display: flex;
     align-items: center;
-`;
-const PlotSectionViewing = styled(PlotSection)`
-    background-color: #D9D9D9;
+    background-color: ${(props) => (props.isViewing ? "#c5c5c5" : "#ffffff")};
 `;
 const AddPlotBG = styled.div`
     position: absolute;
@@ -60,29 +58,40 @@ const LeftHistoryBar = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     // State plot ที่กำลังเปิดอยู่
-    const [viewingPlot, setViewingPlot] = useState(0);
-    const handleClick = (id) => {
+    const [viewingPlot, setViewingPlot] = useState('');
+    const [viewingPlotName, setViewingPlotName] = useState('');
+    const [viewingPlotSensor, setViewingPlottSensor] = useState('');
+    const [viewingPlotVeg, setViewingPlotVeg] = useState('');
+    const handleClick = (id, name, sensor, veg) => {
         setViewingPlot(id);
+        setViewingPlotName(name);
+        setViewingPlottSensor(sensor);
+        setViewingPlotVeg(veg);
       };
 
     // State สำหรับ list plot
     const { user } = useAuth()
 
     const [nameList , setNameList] = useState([]);
+    const refreshPlotList = async () => {
+        if (user) {
+          const plots = await GetPlotInfo(user.email);
+          const plotnames = plots.map((plot) => ({
+            id: plot.id,
+            name: plot.garden_name,
+            sensor: plot.sensor,
+            veg_name: plot.veg_name,
+          }));
+          setNameList(plotnames);
+        }
+      };
     useEffect(() => {
-        const getPlotNames = async () => {
-            if (user) {
-                const plots = await GetPlotData(user.email);
-                const plotnames = plots.map((plot) => plot);
-                setNameList(plotnames);
-              }
-        };
-        getPlotNames();
+        refreshPlotList();
     }, [user]);
 
   // ฟังก์ชั่นเพื่อกรองรายการตามคำค้นหา
   const filteredList = nameList.filter(plot =>
-    plot.toLowerCase().includes(searchTerm.toLowerCase())
+    plot.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const [showAddPlotBox , setShowAddPlotBox] = useState(false);
@@ -104,14 +113,22 @@ const LeftHistoryBar = () => {
                 
 
                 {filteredList.map((plot, index ) => ( 
-                    index === viewingPlot ? (
-                    <PlotSectionViewing onClick={() => handleClick(index)} key={index}>{plot}</PlotSectionViewing>
-                ) : (
-                    <PlotSection onClick={() => handleClick(index)} key={index}>{plot}</PlotSection>)
+                    <PlotSection
+                        key={plot.id}
+                        onClick={() => handleClick(plot.id, plot.name, plot.sensor, plot.veg_name)}
+                        isViewing={plot.id === viewingPlot}
+                    >
+                        {plot.name}
+                    </PlotSection>
                 ))}
             </SearchBoxContainer>
+
+            <RightHistoryBar viewingPlot={viewingPlot} refreshPlotList={refreshPlotList} viewingPlotName={viewingPlotName}
+                viewingPlotSensor={viewingPlotSensor} viewingPlotVeg={viewingPlotVeg}
+            />
+
             {showAddPlotBox ? <><AddPlotBG onClick={showPlotBox}></AddPlotBG>
-                                <AddPlotBox />
+                                <AddPlotBox refreshPlotList={refreshPlotList} showPlotBox={showPlotBox}/>
                                 </>: ""}
         </>
     )
@@ -188,7 +205,7 @@ const SelectBox = styled.select`
 `;
 
 // POPUP เพิ่มแปลงผัก
-const AddPlotBox = () => {
+const AddPlotBox = ({ refreshPlotList , showPlotBox }) => {
     const [sensorList , setSensorList] = useState(
         []
     );
@@ -198,6 +215,20 @@ const AddPlotBox = () => {
     const [selectSensor, setSelectSensor] = useState('');
     const handleSensorChange = (event) => {
         setSelectSensor(event.target.value);
+    };
+
+    const [plotName, setPlotName] = useState('');
+    const handlePlotNameChange = (event) => {
+        setPlotName(event.target.value);
+    };
+
+    // addUserPlot
+    const { user } = useAuth();
+    const addPlot = () => {
+        // (user.email, plotName, "./path/Image", selectSensor, "")
+        addUserPlot(user.email, plotName, "./path/Image", selectSensor, "ผักกาด");
+        refreshPlotList();
+        showPlotBox();
     };
     return(
         <>
@@ -210,6 +241,7 @@ const AddPlotBox = () => {
                             placeholder="Plot name"
                             type="text"
                             className="custom-input"
+                            onChange={handlePlotNameChange}
                         />
                     </InputBox>
 
@@ -223,7 +255,7 @@ const AddPlotBox = () => {
                     </SelectBox>
                 </FormContainer>
                 <PictureBtn type="button" >เพิ่มรูปภาพ</PictureBtn>
-                <LoginBtn type="button" >ยืนยัน</LoginBtn>
+                <LoginBtn onClick={addPlot} type="button">ยืนยัน</LoginBtn>
             </Card>
         </>
     )
@@ -329,14 +361,26 @@ const DeleteBtn = styled.div`
 `;
 
 // UI แสดงข้อมูลแปลงผักขวาบน
-const RightHistoryBar = () => {
+const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewingPlotSensor, viewingPlotVeg}) => {
     // เก็บค่า veg_name
     const [name, setName] = useState('ชื่อแปลงผัก');
+    useEffect(() => {
+        setName(viewingPlotName);
+      }, [viewingPlotName]);
+      
     const handleNameChange = (e) => {
         setName(e.target.value);
       };
 
     // เก็บค่า type
+    const [typeName , setTypeName] = useState();
+    useEffect(() => {
+        setTypeName(viewingPlotVeg);
+      }, [viewingPlotVeg]);
+    const handleTypeChange = (event) => {
+        setTypeName(event.target.value);
+    };
+
     const [typeList , setTypeList] = useState([]);
     useEffect(() => {
         const getPlantNames = async () => {
@@ -346,28 +390,35 @@ const RightHistoryBar = () => {
         };
         getPlantNames();
     }, []);
-    const [selectType, setSelectType] = useState('');
-    const handleTypeChange = (event) => {
-        setSelectType(event.target.value);
-    };
 
     // เก็บค่า sensor
+    const [sensorName , setSensorName] = useState();
+    useEffect(() => {
+        setSensorName(viewingPlotSensor);
+      }, [viewingPlotSensor]);
+
     const [sensorList , setSensorList] = useState(
         []
     );
     useEffect(() => {
         GetSensorNames().then((names) => setSensorList(names));
       }, []);
-    const [selectSensor, setSelectSensor] = useState('');
     const handleSensorChange = (event) => {
-        setSelectSensor(event.target.value);
+        setSensorName(event.target.value);
     };
 
     // เก็บค่า ประวัติ NPK
-  const [rows, setRows] = useState([
-    ['03/10/24', '20', '20', '20', 'N , K ไม่เหมาะสม', <StatusImg src={BadValue}></StatusImg>],
-    ['03/10/24', '20', '20', '20', 'N , K ไม่เหมาะสม', <StatusImg src={goodValue}></StatusImg>],
-  ]);
+    const { user } = useAuth();
+    // GetHistoryInfo(user.email, viewingPlot);
+    const [rows, setRows] = useState([
+        ['03/10/24', '20', '20', '20', 'N , K ไม่เหมาะสม', <StatusImg src={BadValue}></StatusImg>],
+        ['03/10/24', '20', '20', '20', 'N , K ไม่เหมาะสม', <StatusImg src={goodValue}></StatusImg>],
+    ]);
+
+  const deleteUserPlot = () => {
+    deletePlot(user.email, viewingPlot);
+    refreshPlotList();
+  };
     
     
     return(
@@ -387,7 +438,7 @@ const RightHistoryBar = () => {
                         <PlotInfo>
                             <InfoCard>
                                 <Plottype>ประเภท</Plottype>
-                                <PlotSelect value={selectType} onChange={handleTypeChange}>
+                                <PlotSelect value={typeName} onChange={handleTypeChange}>
                                     {typeList.map((type, index) => (
                                     <option key={index} value={type}>
                                         {type}
@@ -397,7 +448,7 @@ const RightHistoryBar = () => {
                             </InfoCard>
                             <InfoCard>
                                 <Plottype>อุปกรณ์</Plottype>
-                                <PlotSelect value={selectSensor} onChange={handleSensorChange}>
+                                <PlotSelect value={sensorName} onChange={handleSensorChange}>
                                     {sensorList.map((sensor, index) => (
                                     <option key={index} value={sensor}>
                                         {sensor}
@@ -408,7 +459,7 @@ const RightHistoryBar = () => {
                         </PlotInfo>
                     </PlotDetail>
 
-                    <DeleteBtn>ลบ</DeleteBtn>
+                    <DeleteBtn onClick={deleteUserPlot}>ลบ</DeleteBtn>
                 </PlotInformation>
 
 
@@ -457,14 +508,9 @@ const  History = () => {
            {user != null 
            ?<Container>
                 <LeftHistoryBar />
-                <RightHistoryBar />
+                {/* <RightHistoryBar /> */}
             </Container> 
             : <StyledH1 to="/login">LOG IN เพื่อตรวจสอบประวัติการใช้งาน</StyledH1>}
-
-            {/* <Container>
-                <LeftHistoryBar />
-                <RightHistoryBar />
-            </Container> */}
         </>
     )
 }

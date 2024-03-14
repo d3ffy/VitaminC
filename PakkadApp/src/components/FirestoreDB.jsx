@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import firebaseApp from '../firebase.js';
-import { getFirestore, collection, addDoc, getDocs , doc} from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc} from 'firebase/firestore';
 import { useAuth  } from "./AuthContext.jsx";
 
 
@@ -85,6 +85,57 @@ export const GetPlotData = async (userEmail) => {
     return [];
   }
 };
+export const GetPlotInfo = async (userEmail) => {
+  var userDocumentId = await GetUserDocumentId(userEmail);
+
+  if (userDocumentId) {
+    try {
+      const firestoreDB = getFirestore(firebaseApp);
+      const userDocRef = doc(firestoreDB, "user_DB", userDocumentId);
+      const plotCollection = collection(userDocRef, "plot_DB");
+      const querySnapshot = await getDocs(plotCollection);
+
+      const plotData = [];
+      querySnapshot.forEach((doc) => {
+        const plot = doc.data();
+        plot.id = doc.id;
+        plotData.push(plot);
+      });
+
+      // console.log(plotData);
+      // console.log(userDocumentId);
+      return plotData;
+    } catch (error) {
+      console.error("Error fetching plot data:", error);
+      return [];
+    }
+  } else {
+    console.log("User document ID is not available yet.");
+    
+    return [];
+  }
+};
+export const GetHistoryInfo = async (userEmail , viewingPlot) =>{
+  var userDocumentId = await GetUserDocumentId(userEmail);
+
+  if (userDocumentId) {
+    try {
+      const firestoreDB = getFirestore(firebaseApp);
+      const historyCollectionRef = collection(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot, "history_DB");
+      const querySnapshot = await getDocs(historyCollectionRef);
+      querySnapshot.forEach((doc) => {
+        console.log("Document ID:", doc.id);
+      });
+    } catch (error) {
+      console.error("Error fetching plot data:", error);
+      return [];
+    }
+  } else {
+    console.log("User document ID is not available yet.");
+    
+    return [];
+  }
+}
 
 export const getPlantData = async () => {
   try {
@@ -119,12 +170,51 @@ export const addUserToFirestore = async (email) => {
 
   // สร้าง subcollection ใหม่
   const subcollectionRef = collection(docRef, "plot_DB");
+};
 
-  // เพิ่ม document ใหม่ใน subcollection
-  await addDoc(subcollectionRef, {
-    garden_name: "ผักคอสแปลงที่1",
-    data: "docdata",
-  });
+export const addUserPlot = async(userEmail, gardenName, imagePath, sensorName, vegName) =>{
+  var userDocumentId = await GetUserDocumentId(userEmail);
+
+  if(userDocumentId){
+    try {
+      const firestoreDB = getFirestore(firebaseApp);
+      const userDocRef = doc(firestoreDB, "user_DB", userDocumentId);
+      const plotCollection = collection(userDocRef, "plot_DB");
+
+      const newPlotDoc = await addDoc(plotCollection, {
+        garden_name: gardenName,
+        image: imagePath,
+        sensor: sensorName,
+        veg_name: vegName,
+      });
+
+      const historyCollection = await collection(newPlotDoc, "history_DB");
+      const historydoc = await addDoc(historyCollection, {
+        nitrogen: 0,
+        phosphorus: 0,
+        potassium: 0,
+      });
+      // await deleteDoc(doc(historyCollection, historydoc.id));
+
+      return newPlotDoc.id;
+    } catch (error) {
+      console.error("Error fetching plot data:", error);
+      return [];
+    }
+  }
+}
+
+export const deletePlot = async (userEmail , viewingPlot) => {
+  if (viewingPlot) {
+    try {
+      const userDocumentId = await GetUserDocumentId(userEmail);
+      const firestoreDB = getFirestore(firebaseApp);
+      const plotRef = doc(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot);
+      await deleteDoc(plotRef);
+    } catch (error) {
+      console.error("Error deleting plot:", error);
+    }
+  }
 };
 
 const FirestoreDB = () => {
