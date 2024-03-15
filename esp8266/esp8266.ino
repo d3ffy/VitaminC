@@ -1,7 +1,29 @@
-// ESP8266
+#include <ESP8266WiFi.h>
+#include <Firebase_ESP_Client.h>
+
+// Define WiFi Component
+#define WIFI_SSID "deffy's room"
+#define WIFI_PASS "FreeWifi"
+
+// Define Buffer Size
 const byte BUFFER_SIZE = 16;
 char receivedMessage[BUFFER_SIZE];
 byte messageIndex = 0;
+
+// Define Firebase Component
+#define API_KEY "AIzaSyCPkTRiFpWFcjuJvAiOZCqoMXJN2Gvtzjc"
+#define DATABASE_URL "https://vitaminc-4695a-default-rtdb.asia-southeast1.firebasedatabase.app/"
+//Provide the token generation process info.
+#include "addons/TokenHelper.h"
+//Provide the RTDB payload printing info and other helper functions.
+#include "addons/RTDBHelper.h"
+
+// Define Firebase Data object
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+// Define Pin Number
 const byte LED = 13;
 
 void setup() {
@@ -10,11 +32,15 @@ void setup() {
 }
 
 void loop() {
-  messageHandler();
-  functionHandler();
-  clearMessage();
-  delay(1000);
-  digitalWrite(LED, LOW);
+  if (WiFi.status() != WL_CONNECTED) {
+    connectWiFi();
+  } else {
+    messageHandler();
+    functionHandler();
+    clearMessage();
+    delay(1000);
+    digitalWrite(LED, LOW);  
+  }
 }
 
 void messageHandler() {
@@ -49,4 +75,19 @@ void clearMessage() {
   for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
   	receivedMessage[i] = '\0';
   }
+}
+
+void connectWiFi() {
+  WiFi.mode(WIFI_STA); // Set ESP to Station Mode
+  WiFi.begin(WIFI_SSID, WIFI_PASS); // Connect to WiFi
+  Serial.print("Connecting to WiFi");
+
+  // loop until ESP connected to WiFi
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print('.');
+    delay(1000);
+  }
+  Serial.println();
+  Serial.print("Connected to IP Address: ");
+  Serial.println(WiFi.localIP()); // Annouce Local IP
 }
