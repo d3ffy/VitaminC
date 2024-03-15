@@ -1,4 +1,4 @@
-# NPK Detecting by Arduino Uno R3 WiFi + ESP8266 with TCS3200 
+# NPK Measuring by Arduino Uno R3 WiFi + ESP8266 with TCS3200 
 Software Project for SF342 [Software Construction Project 2] - Thammasat University
 
 ## Features
