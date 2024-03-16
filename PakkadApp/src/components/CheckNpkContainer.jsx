@@ -10,6 +10,7 @@ import { useAuth } from "./AuthContext.jsx";
 const Container = styled.div`
     width: 95%;
     margin: 0 auto;
+    margin-top: 50px;
     border-radius: 40px;
     display: flex;
     background-color: #F1F3F6;
@@ -33,6 +34,10 @@ const InputContainer = styled.div`
     align-items: center;
 `;
 const PlotSelect = styled.select`
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
     width: 100%;
     border-radius: 100rem;
     border: none;
@@ -55,11 +60,21 @@ const BaseBtn = styled.button`
 const CheckNpkBtn = styled(BaseBtn)`
     color: var(--subTextColor);
     background-color: var(--mainColor);
+    &:hover{
+        background-color: #F44336;
+        color: var(--subTextColor);
+        /* box-shadow: inset 0 0 0 5px var(--mainColor); */
+    }
 `;
 const AddNpkBtn = styled(BaseBtn)`
     color: var(--mainColor);
     box-shadow: inset 0 0 0 5px var(--mainColor);
     background-color: #F1F3F6;
+    &:hover{
+        background-color: #F44336;
+        color: var(--subTextColor);
+        box-shadow: inset 0 0 0 0px var(--mainColor);
+    }
 `;
 const Span = styled.span`
     color: #818181;
@@ -123,6 +138,12 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
             sensor: plot.sensor,
             veg_name: plot.veg_name,
           }));
+          plotnames.unshift({
+            id: "donthavevalue",
+            name: "",
+            sensor: "",
+            veg_name: "",
+          });
           setPlotList(plotnames);
         }
       };
@@ -130,7 +151,7 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
         refreshPlotList();
     }, [user]);
 
-    const [selectPlot, setSelectedPlot] = useState([]);
+    const [selectPlot, setSelectedPlot] = useState('');
     const handlePlotChange = (event) => {
         setSelectedPlot(event.target.value);
     };
@@ -157,11 +178,18 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
     ]
     
     const recordData  = () => {
-        console.log('viewingPlotName:', selectPlot);
-        console.log(RgbToNPK);
-        AddNpkToPlotHistory(user.email, selectPlot, RgbToNPK);
-        alert("Added to History.")
-        console.log("recorded");
+        if (selectPlot) {
+            console.log('viewingPlotName:', selectPlot);
+            console.log(RgbToNPK);
+            AddNpkToPlotHistory(user.email, selectPlot, RgbToNPK);
+            alert("Added to History.");
+            console.log("recorded");
+          } else if(selectPlot == "donthavevalue"){
+            alert("กรุณาเลือกแปลงผักก่อนบันทึกข้อมูล");
+          }
+          else {
+            alert("กรุณาเลือกแปลงผักก่อนบันทึกข้อมูล");
+          }
     };
     const loginAlert  = () => {
         alert('You must login before record data!!!')

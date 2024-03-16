@@ -11,6 +11,7 @@ import { useAuth } from "./AuthContext.jsx";
 import { Link } from 'react-router-dom';
 
 const SearchBoxContainer = styled.div`
+    position: fixed;
     display: flex;
     flex-direction: column;
     width: 21.6vw;
@@ -19,6 +20,9 @@ const SearchBoxContainer = styled.div`
     border-right:1px solid black ;
     font-size: 16px;
     margin: 5vh 0px;
+`;
+const HideBox = styled.div`
+    width: 21.6vw;
 `;
 const SearchBox = styled.input`
     width: 15vw;
@@ -32,18 +36,38 @@ const SearchBox = styled.input`
     margin-left: 3.2vw;
 `;
 const AddPlotBtn = styled.div`
+    padding: 20px;
     padding-left: 3.2vw;
-    margin-bottom: 2vh;
+    margin-bottom: 3.38vh;
     align-items: center;
-    height: 5.38vh;
+    &:hover{
+        background-color: #CCE2D2;
+    }
+`;
+const PlotSectionContainer = styled.div`
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    &::-webkit-scrollbar {
+        display: none;
+    }
 `;
 const PlotSection = styled.div`
-    padding-left: 3.2vw;
-    height: 5.38vh;
+    padding: 10px 3.2vw;
+    height: max-content;
+    width: 100%;
     display: flex;
+    font-size: 1.4rem;
     align-items: center;
     background-color: ${(props) => (props.isViewing ? "#c5c5c5" : "#ffffff")};
+    max-width: 100%;
 `;
+const Pname = styled.p`
+    width: 100%;
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.5;
+`
 const AddPlotBG = styled.div`
     position: absolute;
     top: 0px;
@@ -110,19 +134,21 @@ const LeftHistoryBar = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                <AddPlotBtn onClick={showPlotBox}>add new plot</AddPlotBtn>
+                <AddPlotBtn onClick={showPlotBox}>Add New Plot</AddPlotBtn>
                 
-
+                <PlotSectionContainer>
                 {filteredList.map((plot, index ) => ( 
                     <PlotSection
                         key={plot.id}
                         onClick={() => handleClick(plot.id, plot.name, plot.sensor, plot.veg_name)}
                         isViewing={plot.id === viewingPlot}
                     >
-                        {plot.name}
+                        <Pname>{plot.name}</Pname>
                     </PlotSection>
                 ))}
+                </PlotSectionContainer>
             </SearchBoxContainer>
+            <HideBox></HideBox>
 
             <RightHistoryBar viewingPlot={viewingPlot} refreshPlotList={refreshPlotList} viewingPlotName={viewingPlotName}
                 viewingPlotSensor={viewingPlotSensor} viewingPlotVeg={viewingPlotVeg}

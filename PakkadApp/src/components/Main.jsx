@@ -9,10 +9,6 @@ const Main = () => {
     return(
         <>
             <HeaderMenu isLogin={user != null}/>           
-
-            {user ? (
-                <p>Welcome {user.email} !</p>
-            ) : <p>You're not login</p>}
             <CheckNpkContainer/>      
         </>
     )

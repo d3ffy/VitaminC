@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import { Link } from "react-router-dom"; 
 
 import { getAuth, signOut } from 'firebase/auth';
+import { useAuth } from "./AuthContext.jsx";
 import { useNavigate } from 'react-router-dom'
 
 const Container = styled.div`
@@ -91,7 +92,7 @@ const DropdownContainer = styled.div`
 `;
 const HeaderMenu = ({isLogin}) => {
     let navigate = useNavigate(); 
-
+    const { user } =  useAuth();
     const auth = getAuth()
     const handleLogout = () => {
         signOut(auth)
@@ -116,7 +117,7 @@ const HeaderMenu = ({isLogin}) => {
                         <DropdownContainer>
                             <StyledLink to="/"><LinkBtn>PROFILE</LinkBtn></StyledLink>
                             <DropdownMenu>
-                                <StyledLink to="/"><DropDownBtn><DropDownImg src={userDropDown}></DropDownImg>Username</DropDownBtn></StyledLink>
+                                <StyledLink to="/"><DropDownBtn><DropDownImg src={userDropDown}></DropDownImg>{user.email}</DropDownBtn></StyledLink>
                                 <StyledLink to="/"><DropDownBtn><DropDownImg src={settingDropDown}></DropDownImg>Setting</DropDownBtn></StyledLink>
                                 <StyledLink to="/"><DropDownBtn onClick={handleLogout}><DropDownImg src={logoutDropDown}></DropDownImg>Log Out</DropDownBtn></StyledLink>
                             </DropdownMenu>
