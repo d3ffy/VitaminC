@@ -2,7 +2,7 @@ import React , { useState , useEffect } from "react";
 import styled from 'styled-components';
 import GoodImg from '../image/goodValue.png';
 import BadImg from '../image/badValue.png';
-import { GetPlotData } from "./FirestoreDB.jsx";
+import { GetPlotInfo, AddNpkToPlotHistory, GetPlotData } from "./FirestoreDB.jsx";
 import RealtimeDB from "./RealtimeDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
@@ -110,23 +110,27 @@ const ValueImg = styled.img`
 `
 
 
-const  CheckNpkContainer = () => {
-    const { user } = useAuth()
+const  CheckNpkContainer = ({viewingPlotName}) => {
+    const { user } = useAuth();
 
     const [plotList , setPlotList] = useState([]);
-
-    useEffect(() => {
-        const getPlotNames = async () => {
-            if (user) {
-                const plots = await GetPlotData(user.email);
-                const plotnames = plots.map((plot) => plot);
-                setPlotList(plotnames);
-              }
-        };
-        getPlotNames();
+    const refreshPlotList = async () => {
+        if (user) {
+          const plots = await GetPlotInfo(user.email);
+          const plotnames = plots.map((plot) => ({
+            id: plot.id,
+            name: plot.garden_name,
+            sensor: plot.sensor,
+            veg_name: plot.veg_name,
+          }));
+          setPlotList(plotnames);
+        }
+      };
+      useEffect(() => {
+        refreshPlotList();
     }, [user]);
 
-    const [selectPlot, setSelectedPlot] = useState('');
+    const [selectPlot, setSelectedPlot] = useState([]);
     const handlePlotChange = (event) => {
         setSelectedPlot(event.target.value);
     };
@@ -136,12 +140,14 @@ const  CheckNpkContainer = () => {
         NITROGEN: 0,
         PHOSPHORUS: 0,
         POTASSIUM: 0,
+        date: new Date(),
     });
     const updateNPK = () =>{
         setRgbToNPK({
             NITROGEN: readingRed,
             PHOSPHORUS: readingGreen,
             POTASSIUM: readingBlue,
+            date: new Date(),
         });
     }
     const npkValue =[ 
@@ -149,8 +155,12 @@ const  CheckNpkContainer = () => {
         {valueType: "Phosphorus", subValueType: "P", value: RgbToNPK.PHOSPHORUS ,status : BadImg},
         {valueType: "Potassium", subValueType: "K", value: RgbToNPK.POTASSIUM ,status : GoodImg},
     ]
-
+    
     const recordData  = () => {
+        console.log('viewingPlotName:', selectPlot);
+        console.log(RgbToNPK);
+        AddNpkToPlotHistory(user.email, selectPlot, RgbToNPK);
+        alert("Added to History.")
         console.log("recorded");
     };
     const loginAlert  = () => {
@@ -162,8 +172,8 @@ const  CheckNpkContainer = () => {
                 <PlotSelectTitle>เลือกแปลงผัก</PlotSelectTitle>
                     <PlotSelect value={selectPlot} onChange={handlePlotChange}>
                     {plotList.map((plot, index) => (
-                    <option key={index} value={plot}>
-                        {plot}
+                    <option key={index} value={plot.id}>
+                        {plot.name}
                     </option>
                     ))}
                 </PlotSelect>

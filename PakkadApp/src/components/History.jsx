@@ -4,6 +4,7 @@ import HeaderMenu from "./HeaderMenu";
 import BadValue from "../image/badValue.png";
 import goodValue from "../image/goodValue.png";
 import pencil from "../image/pencil.png";
+import CheckNpkContainer from './CheckNpkContainer.jsx';
 import { GetSensorNames ,getPlantData ,GetPlotData ,addUserPlot ,GetPlotInfo, deletePlot, GetHistoryInfo} from "./FirestoreDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
@@ -126,7 +127,7 @@ const LeftHistoryBar = () => {
             <RightHistoryBar viewingPlot={viewingPlot} refreshPlotList={refreshPlotList} viewingPlotName={viewingPlotName}
                 viewingPlotSensor={viewingPlotSensor} viewingPlotVeg={viewingPlotVeg}
             />
-
+            {false ? <CheckNpkContainer viewingPlotName={viewingPlotName}/>: " "}
             {showAddPlotBox ? <><AddPlotBG onClick={showPlotBox}></AddPlotBG>
                                 <AddPlotBox refreshPlotList={refreshPlotList} showPlotBox={showPlotBox}/>
                                 </>: ""}
@@ -407,13 +408,28 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
         setSensorName(event.target.value);
     };
 
-    // เก็บค่า ประวัติ NPK
     const { user } = useAuth();
-    // GetHistoryInfo(user.email, viewingPlot);
     const [rows, setRows] = useState([
         ['03/10/24', '20', '20', '20', 'N , K ไม่เหมาะสม', <StatusImg src={BadValue}></StatusImg>],
         ['03/10/24', '20', '20', '20', 'N , K ไม่เหมาะสม', <StatusImg src={goodValue}></StatusImg>],
     ]);
+    useEffect(() => {
+        const fetchHistoryData = async () => {
+            if (user && user.email) {
+                const data = await GetHistoryInfo(user.email, viewingPlot);
+                const formattedRows = data.map((item) => [
+                    item.date,
+                    item.nitrogen,
+                    item.phosphorus,
+                    item.potassium,
+                    'N , K ไม่เหมาะสม', 
+                    <StatusImg src={BadValue}></StatusImg>,
+                ]);
+            setRows(formattedRows);
+            }
+        };
+        fetchHistoryData();
+    }, [user.email, viewingPlot]);
 
   const deleteUserPlot = () => {
     deletePlot(user.email, viewingPlot);

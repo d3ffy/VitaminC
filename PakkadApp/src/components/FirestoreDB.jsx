@@ -123,9 +123,29 @@ export const GetHistoryInfo = async (userEmail , viewingPlot) =>{
       const firestoreDB = getFirestore(firebaseApp);
       const historyCollectionRef = collection(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot, "history_DB");
       const querySnapshot = await getDocs(historyCollectionRef);
+      
+      const historyData = [];
       querySnapshot.forEach((doc) => {
-        console.log("Document ID:", doc.id);
+        const docData = doc.data();
+        const dateObj = docData.date.toDate();
+        const day = dateObj.getDate();
+        const month = dateObj.getMonth() + 1; // เดือนเริ่มจาก 0 ถึง 11 ดังนั้นต้องบวก 1
+        const year = dateObj.getFullYear();
+        const formattedDate = `${month}/${day}/${year}`;
+
+        const historyItem = {
+          id: doc.id,
+          nitrogen: docData.NITROGEN,
+          phosphorus: docData.PHOSPHORUS,
+          potassium: docData.POTASSIUM,
+          date: formattedDate,
+        };
+        historyData.push(historyItem);
       });
+      // console.log("History Data:", historyData);
+      // console.log("History Data:", historyData[0]);
+      // console.log("History Data:", historyData[0].date);
+      return historyData;
     } catch (error) {
       console.error("Error fetching plot data:", error);
       return [];
@@ -135,7 +155,29 @@ export const GetHistoryInfo = async (userEmail , viewingPlot) =>{
     
     return [];
   }
-}
+};
+
+export const AddNpkToPlotHistory = async (userEmail, viewingPlot, npkData) =>{
+  var userDocumentId = await GetUserDocumentId(userEmail);
+
+  if (userDocumentId) {
+    try {
+      const firestoreDB = getFirestore(firebaseApp);
+      const historyCollectionRef = collection(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot, "history_DB");
+      
+      const newHistoryDoc = await addDoc(historyCollectionRef,npkData);
+
+      return newHistoryDoc;
+    } catch (error) {
+      console.error("Error fetching plot data:", error);
+      return [];
+    }
+  } else {
+    console.log("User document ID is not available yet.");
+    
+    return [];
+  }
+};
 
 export const getPlantData = async () => {
   try {
@@ -190,9 +232,10 @@ export const addUserPlot = async(userEmail, gardenName, imagePath, sensorName, v
 
       const historyCollection = await collection(newPlotDoc, "history_DB");
       const historydoc = await addDoc(historyCollection, {
-        nitrogen: 0,
-        phosphorus: 0,
-        potassium: 0,
+        NITROGEN: 0,
+        PHOSPHORUS: 0,
+        POTASSIUM: 0,
+        date: new Date(),
       });
       // await deleteDoc(doc(historyCollection, historydoc.id));
 
