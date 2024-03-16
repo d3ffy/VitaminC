@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import firebaseApp from '../firebase.js';
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc} from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc} from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { useAuth  } from "./AuthContext.jsx";
 
 
@@ -145,6 +146,8 @@ export const GetHistoryInfo = async (userEmail , viewingPlot) =>{
       // console.log("History Data:", historyData);
       // console.log("History Data:", historyData[0]);
       // console.log("History Data:", historyData[0].date);
+      historyData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
       return historyData;
     } catch (error) {
       console.error("Error fetching plot data:", error);
@@ -214,7 +217,7 @@ export const addUserToFirestore = async (email) => {
   const subcollectionRef = collection(docRef, "plot_DB");
 };
 
-export const addUserPlot = async(userEmail, gardenName, imagePath, sensorName, vegName) =>{
+export const addUserPlot = async(userEmail, gardenName, file, sensorName, vegName) =>{
   var userDocumentId = await GetUserDocumentId(userEmail);
 
   if(userDocumentId){
@@ -222,13 +225,16 @@ export const addUserPlot = async(userEmail, gardenName, imagePath, sensorName, v
       const firestoreDB = getFirestore(firebaseApp);
       const userDocRef = doc(firestoreDB, "user_DB", userDocumentId);
       const plotCollection = collection(userDocRef, "plot_DB");
+      console.log("test");
 
       const newPlotDoc = await addDoc(plotCollection, {
         garden_name: gardenName,
-        image: imagePath,
+        image:"./path/image",
         sensor: sensorName,
         veg_name: vegName,
       });
+
+      EditPlot(userEmail,newPlotDoc.id,"image",file ? await saveImageToStorage(file, newPlotDoc.id) : "./path/image");
 
       const historyCollection = await collection(newPlotDoc, "history_DB");
       const historydoc = await addDoc(historyCollection, {
@@ -237,7 +243,6 @@ export const addUserPlot = async(userEmail, gardenName, imagePath, sensorName, v
         POTASSIUM: 0,
         date: new Date(),
       });
-      // await deleteDoc(doc(historyCollection, historydoc.id));
 
       return newPlotDoc.id;
     } catch (error) {
@@ -247,16 +252,92 @@ export const addUserPlot = async(userEmail, gardenName, imagePath, sensorName, v
   }
 }
 
-export const deletePlot = async (userEmail , viewingPlot) => {
+export const deletePlot = async (userEmail, viewingPlot) => {
+  const deleteImage = async () =>{
+    const storage = getStorage();
+    const storageRef = ref(storage, `images/${viewingPlot}`);
+    await deleteObject(storageRef).catch((error) => {
+    if (error.code !== "storage/object-not-found") {
+      throw error;
+    }
+  });
+  }
   if (viewingPlot) {
     try {
       const userDocumentId = await GetUserDocumentId(userEmail);
       const firestoreDB = getFirestore(firebaseApp);
       const plotRef = doc(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot);
       await deleteDoc(plotRef);
+      await deleteImage();
     } catch (error) {
       console.error("Error deleting plot:", error);
     }
+  }
+};
+export const EditPlot = async (userEmail, viewingPlot, valueTarget, newValue) =>{
+  if (viewingPlot) {
+    try {
+      const userDocumentId = await GetUserDocumentId(userEmail);
+      const firestoreDB = getFirestore(firebaseApp);
+      const plotRef = doc(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot);
+      
+      plotRef[valueTarget] = newValue;
+
+      await updateDoc(plotRef, { [valueTarget]: newValue });
+    } catch (error) {
+      console.error("Error deleting plot:", error);
+    }
+  }
+}
+
+export const saveImageURLToFirestore = async (userEmail, viewingPlot, imageURL) => {
+  if (viewingPlot) {
+    try{
+      const userDocumentId = await GetUserDocumentId(userEmail);
+      const firestoreDB = getFirestore(firebaseApp);
+      const userRef = doc(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot);
+      await updateDoc(userRef, { "image": imageURL });
+    } catch (error) {
+      console.error("Error deleting plot:", error);
+    }
+  }
+};
+
+export const handleImageFileChange = async (userEmail,viewingPlot,file) => {
+  if (file) {
+    const storage = getStorage();
+    const storageRef = ref(storage, `images/${viewingPlot}`);
+
+    const existingFileRef = ref(storage, `images/${viewingPlot}`);
+    await deleteObject(existingFileRef).catch((error) => {
+      // ถ้าไม่มีไฟล์เดิม จะเกิด error แต่สามารถไล่ไปได้
+      if (error.code !== "storage/object-not-found") {
+        throw error;
+      }
+    });
+
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    // เก็บ downloadURL ไว้ใน Firestore
+    saveImageURLToFirestore(userEmail,viewingPlot,downloadURL);
+    return downloadURL;
+  }
+};
+export const saveImageToStorage = async (file,plotId) => {
+  if (file) {
+    const storage = getStorage();
+    const storageRef = ref(storage, `images/${plotId}`);
+
+    const existingFileRef = ref(storage, `images/${plotId}`);
+    await deleteObject(existingFileRef).catch((error) => {
+      // ถ้าไม่มีไฟล์เดิม จะเกิด error แต่สามารถไล่ไปได้
+      if (error.code !== "storage/object-not-found") {
+        throw error;
+      }
+    });
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
   }
 };
 

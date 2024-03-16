@@ -1,11 +1,11 @@
-import React, { useState , useEffect} from 'react';
+import React, { useState , useEffect, useRef} from 'react';
 import styled from 'styled-components';
 import HeaderMenu from "./HeaderMenu";
 import BadValue from "../image/badValue.png";
 import goodValue from "../image/goodValue.png";
 import pencil from "../image/pencil.png";
 import CheckNpkContainer from './CheckNpkContainer.jsx';
-import { GetSensorNames ,getPlantData ,GetPlotData ,addUserPlot ,GetPlotInfo, deletePlot, GetHistoryInfo} from "./FirestoreDB.jsx";
+import { GetSensorNames ,getPlantData ,addUserPlot ,GetPlotInfo, deletePlot, GetHistoryInfo, EditPlot, handleImageFileChange} from "./FirestoreDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
 import { Link } from 'react-router-dom';
@@ -87,11 +87,13 @@ const LeftHistoryBar = () => {
     const [viewingPlotName, setViewingPlotName] = useState('');
     const [viewingPlotSensor, setViewingPlottSensor] = useState('');
     const [viewingPlotVeg, setViewingPlotVeg] = useState('');
-    const handleClick = (id, name, sensor, veg) => {
+    const [viewingPlotImage, setViewingPlotImage] = useState('');
+    const handleClick = (id, name, sensor, veg, image) => {
         setViewingPlot(id);
         setViewingPlotName(name);
         setViewingPlottSensor(sensor);
         setViewingPlotVeg(veg);
+        setViewingPlotImage(image);
       };
 
     // State สำหรับ list plot
@@ -106,6 +108,7 @@ const LeftHistoryBar = () => {
             name: plot.garden_name,
             sensor: plot.sensor,
             veg_name: plot.veg_name,
+            image: plot.image,
           }));
           setNameList(plotnames);
         }
@@ -140,7 +143,7 @@ const LeftHistoryBar = () => {
                 {filteredList.map((plot, index ) => ( 
                     <PlotSection
                         key={plot.id}
-                        onClick={() => handleClick(plot.id, plot.name, plot.sensor, plot.veg_name)}
+                        onClick={() => handleClick(plot.id, plot.name, plot.sensor, plot.veg_name, plot.image)}
                         isViewing={plot.id === viewingPlot}
                     >
                         <Pname>{plot.name}</Pname>
@@ -151,7 +154,7 @@ const LeftHistoryBar = () => {
             <HideBox></HideBox>
 
             <RightHistoryBar viewingPlot={viewingPlot} refreshPlotList={refreshPlotList} viewingPlotName={viewingPlotName}
-                viewingPlotSensor={viewingPlotSensor} viewingPlotVeg={viewingPlotVeg}
+                viewingPlotSensor={viewingPlotSensor} viewingPlotVeg={viewingPlotVeg} viewingPlotImage={viewingPlotImage}
             />
             {false ? <CheckNpkContainer viewingPlotName={viewingPlotName}/>: " "}
             {showAddPlotBox ? <><AddPlotBG onClick={showPlotBox}></AddPlotBG>
@@ -218,9 +221,17 @@ const LoginBtn = styled.button`
     background-color: var(--mainColor);
     margin-top: 40px;
 `;
-const PictureBtn = styled(LoginBtn)`
+const PictureBtn = styled.div`
+    width: 100%;
+    display: flex;
+    height: 63px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 100rem;
+    font-size: 20px;
     background-color: transparent;
     color: var(--mainColor);
+    margin-top: 40px;
     box-shadow: inset 0 0 0px 3px var(--mainColor);
 `
 const SelectBox = styled.select`
@@ -232,7 +243,7 @@ const SelectBox = styled.select`
 `;
 
 // POPUP เพิ่มแปลงผัก
-const AddPlotBox = ({ refreshPlotList , showPlotBox }) => {
+const AddPlotBox = ({ refreshPlotList , showPlotBox}) => {
     const [sensorList , setSensorList] = useState(
         []
     );
@@ -251,12 +262,26 @@ const AddPlotBox = ({ refreshPlotList , showPlotBox }) => {
 
     // addUserPlot
     const { user } = useAuth();
+    const [imageUrl, setImageUrl] = useState(null);
+    const fileInputRef = useRef(null);
+    const changeImage = () => {
+        fileInputRef.current.click();
+    };
+    const handleFileChange = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setImageUrl(file);
+            refreshPlotList();
+        }
+      };
+
     const addPlot = () => {
         // (user.email, plotName, "./path/Image", selectSensor, "")
-        addUserPlot(user.email, plotName, "./path/Image", selectSensor, "ผักกาด");
+        addUserPlot(user.email, plotName, imageUrl, selectSensor, "ผักกาด");
         refreshPlotList();
         showPlotBox();
     };
+
     return(
         <>
             <Card>
@@ -281,7 +306,14 @@ const AddPlotBox = ({ refreshPlotList , showPlotBox }) => {
                                     ))}
                     </SelectBox>
                 </FormContainer>
-                <PictureBtn type="button" >เพิ่มรูปภาพ</PictureBtn>
+                <PictureBtn onClick={changeImage}>เพิ่มรูปภาพ</PictureBtn>
+                    <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                    />
                 <LoginBtn onClick={addPlot} type="button">ยืนยัน</LoginBtn>
             </Card>
         </>
@@ -299,6 +331,7 @@ const RightContainer = styled.div`
 `;
 const PlotInformation = styled.div`
     display: flex;
+    position: relative;
 `;
 const PlotTitle = styled.input`
     font-size: 48px;
@@ -324,6 +357,8 @@ const PlotImage = styled.img`
     margin-right: 4vw;
     background-color: #C1C1C1;
     border-radius: 20px;
+    object-fit: cover;
+    object-position: center;
 `;
 const PlotInfo = styled.div`
     display:flex ;
@@ -375,20 +410,35 @@ const StatusImg = styled.img`
     height: 2.5vh;
 `;
 const DeleteBtn = styled.div`
-    position: absolute;
+    font-weight: bold;
     display: flex;
     justify-content: center;
     align-items: center;
-    right: 21%;
-    top: 4%;
-    background: #C1C1C1;
-    border-radius: 100%;
-    width: 5vh;
+    background: #c5c5c5;
+    border-radius: 10px;
+    width: 10vh;
     height: 5vh;
+    &:hover{
+        background-color: #F44336;
+    }
+`;
+const EditBtn = styled(DeleteBtn)`
+    background-color: #c5c5c5;
+    &:hover{
+        background-color: #CCE2D2;
+    }
+`;
+const EditContainer = styled.div`
+    display: flex;
+    position: absolute;
+    right: 0%;
+    top: 10%;
+    gap: 20px;
 `;
 
 // UI แสดงข้อมูลแปลงผักขวาบน
-const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewingPlotSensor, viewingPlotVeg}) => {
+const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewingPlotSensor,
+                            viewingPlotVeg ,viewingPlotImage}) => {
     // เก็บค่า veg_name
     const [name, setName] = useState('ชื่อแปลงผัก');
     useEffect(() => {
@@ -457,20 +507,55 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
         fetchHistoryData();
     }, [user.email, viewingPlot]);
 
-  const deleteUserPlot = () => {
-    deletePlot(user.email, viewingPlot);
-    refreshPlotList();
-  };
-    
+    const deleteUserPlot = () => {
+        deletePlot(user.email, viewingPlot);
+        refreshPlotList();
+    };
+    const editUserPlot = () => {
+        EditPlot(user.email,viewingPlot,"garden_name",name);
+        EditPlot(user.email,viewingPlot,"sensor",sensorName);
+        EditPlot(user.email,viewingPlot,"veg_name",typeName);
+        refreshPlotList();
+    };
+
+
+    const [imageUrl, setImageUrl] = useState(null);
+    useEffect(() => {
+        const fetchData = async () => {
+          setImageUrl(viewingPlotImage);
+        };
+        fetchData();
+      }, [user.email, viewingPlot]);
+
+    const fileInputRef = useRef(null);
+    const changeImage = () => {
+        fileInputRef.current.click();
+    };
+    const handleFileChange = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const downloadURL = await handleImageFileChange(user.email, viewingPlot, file);
+            setImageUrl(downloadURL);
+            refreshPlotList();
+        }
+      };
     
     return(
         <>
             <RightContainer>
                 <PlotInformation>
-                    <ImageContainer>
-                        <PlotImage src={BadValue}></PlotImage>
+                    <ImageContainer onClick={changeImage}>
+                        <PlotImage src={imageUrl || BadValue}></PlotImage>
                         <PencilImg src={pencil}></PencilImg>
                     </ImageContainer>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                    />
+                    {false?<AddPlotBox changeImage={changeImage} handleFileChange={handleFileChange}  fileInputRef={fileInputRef}/>:""}
                     <PlotDetail>
                         <PlotTitle
                             type='text'
@@ -501,7 +586,10 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
                         </PlotInfo>
                     </PlotDetail>
 
-                    <DeleteBtn onClick={deleteUserPlot}>ลบ</DeleteBtn>
+                    <EditContainer>
+                        <EditBtn onClick={editUserPlot}>แก้ไข</EditBtn>
+                        <DeleteBtn onClick={deleteUserPlot}>ลบ</DeleteBtn>
+                    </EditContainer>
                 </PlotInformation>
 
 
