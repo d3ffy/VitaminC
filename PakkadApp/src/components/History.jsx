@@ -546,7 +546,7 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
             <RightContainer>
                 <PlotInformation>
                     <ImageContainer onClick={changeImage}>
-                        <PlotImage src={imageUrl || BadValue}></PlotImage>
+                        <PlotImage src={imageUrl || null}></PlotImage>
                         <PencilImg src={pencil}></PencilImg>
                     </ImageContainer>
                     <input

@@ -117,37 +117,6 @@ const Register = () => {
         }
     }, [confirmPassword, setPasswordHandle, email]);
 
-
-    // const handleRegister = async () => {
-    //     const auth = getAuth();
-    //     try {
-    //         if (password === confirmPassword) {
-    //             const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-
-    //             if(signInMethods === 0 ){
-    //                 await createUserWithEmailAndPassword(auth, email, password);
-    //                 await addUserToFirestore(email);
-    //                 setEmail('');
-    //                 setPassword('');
-    //                 setConfirmPassword('');
-    //                 navigate('/');
-    //                 console.log("Register Success");
-    //             }
-    //             else{
-    //                 alert("This email was used. Please use another Email.");
-    //             }
-    //         }else if(password.length < 7){
-    //             alert("password should be at least 6 characters");
-    //         } else if(password !== confirmPassword){
-    //             alert("password !== confirmPassword");
-    //         }else{
-    //             alert("somthing went wrong , password should be at least 6 characters");
-    //         }
-    //     } catch (error) {
-    //         console.error(error);
-    //     }
-    // };
-
     const handleRegister = async () => {
         const auth = getAuth();
     
