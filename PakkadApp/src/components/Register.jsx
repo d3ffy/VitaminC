@@ -5,7 +5,7 @@ import padlockImg from '../image/padlock 1.png';
 import HeaderMenu from "./HeaderMenu";
 
 import { useNavigate } from 'react-router-dom'
-import { getAuth, fetchSignInMethodsForEmail } from 'firebase/auth';
+import { getAuth, fetchSignInMethodsForEmail , getIdToken, verifyIdToken} from 'firebase/auth';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import {addUserToFirestore } from './FirestoreDB.jsx'
 
@@ -100,10 +100,10 @@ const Register = () => {
 
     const setPasswordHandle = (e) =>{
         setPassword(e.target.value);
-        if(password.length < 7){
+        if(password.length < 5){
             setPasswordStatus(false);
         }
-        if(password.length >= 7){
+        if(password.length >= 5){
             setPasswordStatus(true);
         }
     };
@@ -118,36 +118,72 @@ const Register = () => {
     }, [confirmPassword, setPasswordHandle, email]);
 
 
+    // const handleRegister = async () => {
+    //     const auth = getAuth();
+    //     try {
+    //         if (password === confirmPassword) {
+    //             const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+
+    //             if(signInMethods === 0 ){
+    //                 await createUserWithEmailAndPassword(auth, email, password);
+    //                 await addUserToFirestore(email);
+    //                 setEmail('');
+    //                 setPassword('');
+    //                 setConfirmPassword('');
+    //                 navigate('/');
+    //                 console.log("Register Success");
+    //             }
+    //             else{
+    //                 alert("This email was used. Please use another Email.");
+    //             }
+    //         }else if(password.length < 7){
+    //             alert("password should be at least 6 characters");
+    //         } else if(password !== confirmPassword){
+    //             alert("password !== confirmPassword");
+    //         }else{
+    //             alert("somthing went wrong , password should be at least 6 characters");
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // };
+
     const handleRegister = async () => {
         const auth = getAuth();
     
         try {
-            if (password === confirmPassword) {
-                const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-
-                if(signInMethods === 0 ){
+            if (password !== confirmPassword) {
+                alert("Password and confirm password do not match");
+                return;
+            }
+    
+            if (password.length < 5) {
+                alert("Password should be at least 6 characters");
+                return;
+            }
+    
+            const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+    
+            if (signInMethods.length > 0) {
+                alert("This email is already in use. Please use another email.");
+            } else {
+                try {
                     await createUserWithEmailAndPassword(auth, email, password);
                     await addUserToFirestore(email);
                     setEmail('');
                     setPassword('');
                     setConfirmPassword('');
                     navigate('/');
-                    console.log("Register Success");
+                    console.log("Registration successful");
+                } catch (error) {
+                    console.error("Registration error:", error);
+                    alert("This email is already in use. Please use another email.");
                 }
-                else{
-                    alert("This email was used. Please use another Email.");
-                }
-            }else if(password.length < 7){
-                alert("password should be at least 6 characters");
-            } else if(password !== confirmPassword){
-                alert("password !== confirmPassword");
-            }else{
-                alert("somthing went wrong , password should be at least 6 characters");
             }
         } catch (error) {
             console.error(error);
         }
-  };
+    };
 
     return(
         <>

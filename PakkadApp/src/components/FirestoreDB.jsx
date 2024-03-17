@@ -211,6 +211,23 @@ export const addUserToFirestore = async (email) => {
 
   // สร้าง subcollection ใหม่
   const subcollectionRef = collection(docRef, "plot_DB");
+  const plotData = {
+    garden_name: "carrot",
+    image: "./path/image",
+    sensor: "sonsor1",
+    veg_name: "ผักคอส",
+  };
+  const plotDocRef = await addDoc(subcollectionRef, plotData);
+  const historySubcollectionRef = collection(plotDocRef, "history_DB");
+
+  // เพิ่ม document ใน subcollection history_DB
+  const historyData = {
+    NITROGEN: 1,
+    PHOSPHORUS: 2,
+    POTASSIUM: 3,
+    date: new Date(),
+  };
+  await addDoc(historySubcollectionRef, historyData);
 };
 
 export const addUserPlot = async(userEmail, gardenName, file, sensorName, vegName) =>{
@@ -221,7 +238,6 @@ export const addUserPlot = async(userEmail, gardenName, file, sensorName, vegNam
       const firestoreDB = getFirestore(firebaseApp);
       const userDocRef = doc(firestoreDB, "user_DB", userDocumentId);
       const plotCollection = collection(userDocRef, "plot_DB");
-      console.log("test");
 
       const newPlotDoc = await addDoc(plotCollection, {
         garden_name: gardenName,
@@ -262,7 +278,17 @@ export const deletePlot = async (userEmail, viewingPlot) => {
       const userDocumentId = await GetUserDocumentId(userEmail);
       const firestoreDB = getFirestore(firebaseApp);
       const plotRef = doc(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot);
+
+      // ลบ subcollection "history_DB" ****ถ้าไม่ลบ doc ข้างในให้หมด จะลบ collection ไม่ได้****
+      const historyCollectionRef = collection(plotRef, "history_DB");
+      const historyDocs = await getDocs(historyCollectionRef);
+      for (const doc of historyDocs.docs) {
+        await deleteDoc(doc.ref);
+      }
+
+      // ลบ doc "plot"
       await deleteDoc(plotRef);
+
       await deleteImage();
     } catch (error) {
       console.error("Error deleting plot:", error);
