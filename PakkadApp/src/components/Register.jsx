@@ -5,7 +5,7 @@ import padlockImg from '../image/padlock 1.png';
 import HeaderMenu from "./HeaderMenu";
 
 import { useNavigate } from 'react-router-dom'
-import { getAuth, fetchSignInMethodsForEmail , getIdToken, verifyIdToken} from 'firebase/auth';
+import { getAuth, fetchSignInMethodsForEmail} from 'firebase/auth';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import {addUserToFirestore } from './FirestoreDB.jsx'
 

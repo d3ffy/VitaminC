@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import firebaseApp from '../firebase.js';
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc} from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc ,getDoc} from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { useAuth  } from "./AuthContext.jsx";
 
@@ -154,6 +154,35 @@ export const GetHistoryInfo = async (userEmail , viewingPlot) =>{
     console.log("User document ID is not available yet.");
     
     return [];
+  }
+};
+export const GetPlotDocByID = async (userEmail , viewingPlot) =>{
+  var userDocumentId = await GetUserDocumentId(userEmail);
+
+  if (userDocumentId) {
+    try {
+      const firestoreDB = getFirestore(firebaseApp);
+      const plotDocRef = doc(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot);
+
+      // ดึงข้อมูลจาก document
+      const plotDocSnapshot = await getDoc(plotDocRef);
+
+      // เข้าถึงข้อมูลใน document
+      if (plotDocSnapshot.exists()) {
+        const plotData = plotDocSnapshot.data();
+        // ทำการประมวลผลข้อมูลต่อไป
+        return plotData;
+      } else {
+        console.log("Plot document does not exist");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching plot data:", error);
+      return null;
+    }
+  } else {
+    console.log("User document ID is not available yet.");
+    return null;
   }
 };
 export const getPlantData = async () => {
@@ -360,104 +389,111 @@ export const saveImageToStorage = async (file,plotId) => {
     return downloadURL;
   }
 };
+export const calcNpkResultStatusMainPage = async (userEmail,viewingPlot,nitrogen,phosphorus,potassium) => {
+  const plotInfos = await GetPlotInfo(userEmail);
+  const historyData = await GetHistoryInfo(userEmail,viewingPlot);
+  const plantData = await getPlantData();
+  // get plotInfo.sensor, veg_name, garden_name, image, id ของ viewingPlot 
+  const plotInfo = plotInfos.find((info) => info.id === viewingPlot) || {};
+  // get ค่า npm ที่เหมาะสม plantInfo.name ,nitrogen_start ,nitrogen_end
+  const plantInfo = plantData.find((plant) => plant.name === plotInfo.veg_name) || {};
+  const nitrogenStatus = calculateNutrientStatus(
+    plantInfo.nitrogen_start,
+    plantInfo.nitrogen_end,
+    nitrogen,
+    "N"
+  );
+  const phosphorusStatus = calculateNutrientStatus(
+    plantInfo.phosphorus_start,
+    plantInfo.phosphorus_end,
+    phosphorus,
+    "P"
+  );
+  const potassiumStatus = calculateNutrientStatus(
+    plantInfo.potassium_start,
+    plantInfo.potassium_end,
+    potassium,
+    "K"
+  );
+  const IsNitrogenStatusInRange = nitrogenStatus.isInRange;
+  const IsPhosphorusStatusInRange = phosphorusStatus.isInRange;
+  const IsPotassiumStatusStatusInRange = potassiumStatus.isInRange;
+
+  return {IsNitrogenStatusInRange , IsPhosphorusStatusInRange ,IsPotassiumStatusStatusInRange};
+}
 
 export const calcNpkResult = async (userEmail,viewingPlot) => {
   const plotInfos = await GetPlotInfo(userEmail);
   const historyData = await GetHistoryInfo(userEmail,viewingPlot);
   const plantData = await getPlantData();
-  // เอาค่า sensor veg_name garden_name image id ของ viewingPlot 
-  let plotInfo = {} 
-  let plantInfo = {}
-  plotInfos.forEach((info) => {
-        if(info.id === viewingPlot){
-          plotInfo = info;
-        };
-  });
-  
-  plantData.forEach((plant) => {
-    if(plant.name === plotInfo.veg_name){
-      plantInfo = {
-        plantName: plant.name,
-        nitrogen_start: plant.nitrogen_start,
-        nitrogen_end: plant.nitrogen_end,
-        phosphorus_start: plant.phosphorus_start,
-        phosphorus_end: plant.phosphorus_end,
-        potassium_start: plant.potassium_start,
-        potassium_end: plant.potassium_end,
-      }
-    }
-  });
-  // console.log(plantInfo);
+  // get plotInfo.sensor, veg_name, garden_name, image, id ของ viewingPlot 
+  const plotInfo = plotInfos.find((info) => info.id === viewingPlot) || {};
+  // get ค่า npm ที่เหมาะสม plantInfo.name ,nitrogen_start ,nitrogen_end
+  const plantInfo = plantData.find((plant) => plant.name === plotInfo.veg_name) || {};
 
-  const calculateNpk = (startValue, endValue, targetValue) => {
-    if(targetValue < startValue){
-      return [false , startValue-targetValue , "lower"];
-    }else if(targetValue > startValue){
-      return [false , targetValue-startValue , "more"];
-    }else if(targetValue >= startValue && targetValue <= endValue){
-      return [true , 0 , "inRange"];
-    }else{
-      console.log("out of condition");
-    }
-  };
-  const [isNInRange, Ndiff ,Nstatus] = calculateNpk(50, 50, 50);
+  const calcNpkCollection = historyData.map((historyItem) => {
+    const { nitrogen, phosphorus, potassium, id, date } = historyItem;
+    const npkStatus = calculateNpkStatus(plantInfo, nitrogen, phosphorus, potassium);
 
-
-  const calcNpkCollection = [];
-  historyData.forEach((row) => {
-
-    const [isNInRange, Ndiff ,Nstatus] = calculateNpk(plantInfo.nitrogen_start, plantInfo.nitrogen_end, row.nitrogen);
-    let Nsumary;
-    switch(Nstatus){
-      case "lower":
-        Nsumary = "N < "+Ndiff;
-        break;
-      case "more":
-        Nsumary = "N < "+Ndiff;
-        break;
-      case "inRange":
-        Nsumary = "N is In Range";
-        break;
-    }
-    const [isPInRange, Pdiff ,Pstatus] = calculateNpk(plantInfo.phosphorus_start, plantInfo.phosphorus_end, row.phosphorus);
-    let Psumary;
-    switch(Pstatus){
-      case "lower":
-        Psumary = "P < "+Pdiff;
-        break;
-      case "more":
-        Psumary = "P < "+Pdiff;
-        break;
-      case "inRange":
-        Psumary = "P is In Range";
-        break;
-    }
-    const [isKInRange, Kdiff ,Kstatus] = calculateNpk(plantInfo.potassium_start, plantInfo.potassium_end, row.potassium);
-    let Ksumary;
-    switch(Kstatus){
-      case "lower":
-        Ksumary = "K < "+Kdiff;
-        break;
-      case "more":
-        Ksumary = "K < "+Kdiff;
-        break;
-      case "inRange":
-        Ksumary = "K is In Range";
-        break;
-    }
-    const historyItem = {
-      id: row.id,
-      nitrogen: row.nitrogen,
-      phosphorus: row.phosphorus,
-      potassium: row.potassium,
-      summary : Nsumary+" | "+Psumary+" | "+Ksumary,
-      date: row.date,
-      status: isNInRange && isPInRange && isKInRange ?true:false,
+    return {
+      id,
+      nitrogen,
+      phosphorus,
+      potassium,
+      summary: npkStatus.summary,
+      date,
+      status: npkStatus.isInRange,
     };
-    calcNpkCollection.push(historyItem);
   });
 
   return calcNpkCollection;
+};
+
+const calculateNpkStatus = (plantInfo, nitrogen, phosphorus, potassium) => {
+  const nitrogenStatus = calculateNutrientStatus(
+    plantInfo.nitrogen_start,
+    plantInfo.nitrogen_end,
+    nitrogen,
+    "N"
+  );
+  const phosphorusStatus = calculateNutrientStatus(
+    plantInfo.phosphorus_start,
+    plantInfo.phosphorus_end,
+    phosphorus,
+    "P"
+  );
+  const potassiumStatus = calculateNutrientStatus(
+    plantInfo.potassium_start,
+    plantInfo.potassium_end,
+    potassium,
+    "K"
+  );
+
+  const summary = `${nitrogenStatus.summary} | ${phosphorusStatus.summary} | ${potassiumStatus.summary}`;
+  const isInRange = nitrogenStatus.isInRange && phosphorusStatus.isInRange && potassiumStatus.isInRange;
+
+  return { summary, isInRange };
+};
+
+const calculateNutrientStatus = (start, end, value, nutrient) => {
+  const isInRange = value >= start && value <= end;
+  const diff = isInRange ? 0 : Math.abs(value - start);
+  const status = isInRange ? "inRange" : value < start ? "lower" : "more";
+
+  let summary;
+  switch (status) {
+    case "lower":
+      summary = `${nutrient} < ${diff}`;
+      break;
+    case "more":
+      summary = `${nutrient} > ${diff}`;
+      break;
+    case "inRange":
+      summary = `${nutrient} is In Range`;
+      break;
+  }
+
+  return { summary, isInRange };
 };
 
 const FirestoreDB = () => {

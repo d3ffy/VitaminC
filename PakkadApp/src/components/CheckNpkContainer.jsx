@@ -2,8 +2,8 @@ import React , { useState , useEffect } from "react";
 import styled from 'styled-components';
 import GoodImg from '../image/goodValue.png';
 import BadImg from '../image/badValue.png';
-import { GetPlotInfo, AddNpkToPlotHistory, GetPlotData } from "./FirestoreDB.jsx";
-import RealtimeDB from "./RealtimeDB.jsx";
+import { GetPlotInfo, AddNpkToPlotHistory, GetPlotData,GetPlotDocByID,GetSensorNames ,calcNpkResultStatusMainPage } from "./FirestoreDB.jsx";
+import  {GetNpkFromRealtimeDB} from "./RealtimeDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
 
@@ -73,7 +73,7 @@ const AddNpkBtn = styled(BaseBtn)`
     &:hover{
         background-color: #F44336;
         color: var(--subTextColor);
-        box-shadow: inset 0 0 0 0px var(--mainColor);
+        box-shadow: inset 0 0 0 px var(--mainColor);
     }
 `;
 const Span = styled.span`
@@ -156,27 +156,51 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
         setSelectedPlot(event.target.value);
     };
     
-    const { readingRed, readingGreen, readingBlue } = RealtimeDB();
+    // จัดการค่า NPK ดึงค่า แสดงค่า
     const [RgbToNPK, setRgbToNPK] = useState({
         NITROGEN: 0,
         PHOSPHORUS: 0,
         POTASSIUM: 0,
         date: new Date(),
     });
-    const updateNPK = () =>{
-        setRgbToNPK({
-            NITROGEN: readingRed,
-            PHOSPHORUS: readingGreen,
-            POTASSIUM: readingBlue,
-            date: new Date(),
-        });
+    const [npkStatus, setnpkStatus] = useState({
+        NITROGEN: false,
+        PHOSPHORUS: false,
+        POTASSIUM: false,
+    });
+    const updateNPK = async() =>{
+        try{
+            const plotData = await GetPlotDocByID(user.email, selectPlot);
+            // const plotData = await GetPlotDocByIdData();
+            const npkStatus = await calcNpkResultStatusMainPage(user.email,selectPlot,RgbToNPK.NITROGEN,RgbToNPK.PHOSPHORUS,RgbToNPK.POTASSIUM);
+            await GetNpkFromRealtimeDB(plotData.sensor)
+            .then(([red, green, blue]) => {
+                const readingRed = red !== null ?  red : 0;
+                const readingGreen = green !== null ?  green : 0;
+                const readingBlue = blue !== null ?  blue : 0;
+            setRgbToNPK({
+                NITROGEN: readingRed,
+                PHOSPHORUS: readingGreen,
+                POTASSIUM: readingBlue,
+                date: new Date(),
+            });
+            setnpkStatus({
+                NITROGEN: npkStatus.IsNitrogenStatusInRange,
+                PHOSPHORUS: npkStatus.IsPhosphorusStatusInRange,
+                POTASSIUM: npkStatus.IsPotassiumStatusStatusInRange,
+            });
+            });
+        } catch(error) {
+            console.error('Error fetching sensor readings:', error);
+        }
     }
     const npkValue =[ 
-        {valueType: "Nitrogen", subValueType: "N", value: RgbToNPK.NITROGEN ,status : GoodImg},
-        {valueType: "Phosphorus", subValueType: "P", value: RgbToNPK.PHOSPHORUS ,status : BadImg},
-        {valueType: "Potassium", subValueType: "K", value: RgbToNPK.POTASSIUM ,status : GoodImg},
+        {valueType: "Nitrogen", subValueType: "N", value: RgbToNPK.NITROGEN ,status : npkStatus.NITROGEN?GoodImg:BadImg},
+        {valueType: "Phosphorus", subValueType: "P", value: RgbToNPK.PHOSPHORUS ,status : npkStatus.PHOSPHORUS?GoodImg:BadImg},
+        {valueType: "Potassium", subValueType: "K", value: RgbToNPK.POTASSIUM ,status : npkStatus.POTASSIUM?GoodImg:BadImg},
     ]
     
+    // บันทึกประวัติการตรวจ
     const recordData  = () => {
         if (selectPlot) {
             console.log('viewingPlotName:', selectPlot);

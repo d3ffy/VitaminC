@@ -2,6 +2,42 @@ import React, { useEffect, useState } from 'react';
 import firebaseApp from '../firebase.js';
 import { getDatabase, ref, onValue } from "firebase/database";
 
+export const GetNpkFromRealtimeDB = (sensor) =>{
+  const realtimeDB = getDatabase(firebaseApp);
+  // let sensor = "test"
+  // Define Realtime Database Path
+  const dataRedPath = `${sensor}/red`;
+  const dataGreenPath = `${sensor}/green`;
+  const dataBluePath = `${sensor}/blue`;
+  const realtimeDBRefRed = ref(realtimeDB, dataRedPath);
+  const realtimeDBRefGreen = ref(realtimeDB, dataGreenPath);
+  const realtimeDBRefBlue = ref(realtimeDB, dataBluePath);
+  let readingRed;
+  let readingGreen;
+  let readingBlue;
+
+  return Promise.all([
+    new Promise((resolve) => {
+      const unsubscribeRed = onValue(realtimeDBRefRed, (snapshot) => {
+        resolve(snapshot.val());
+        unsubscribeRed();
+      });
+    }),
+    new Promise((resolve) => {
+      const unsubscribeGreen = onValue(realtimeDBRefGreen, (snapshot) => {
+        resolve(snapshot.val());
+        unsubscribeGreen();
+      });
+    }),
+    new Promise((resolve) => {
+      const unsubscribeBlue = onValue(realtimeDBRefBlue, (snapshot) => {
+        resolve(snapshot.val());
+        unsubscribeBlue();
+      });
+    }),
+  ]);
+};
+
 const RealtimeDB = () => {
     // Initialize Realtime Database from Firebase
     const realtimeDB = getDatabase(firebaseApp);
@@ -62,6 +98,7 @@ const RealtimeDB = () => {
         };
       }, []);
 
+    
     return {
         readingRed,
         readingGreen,

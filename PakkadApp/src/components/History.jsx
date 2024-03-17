@@ -5,7 +5,7 @@ import BadValue from "../image/badValue.png";
 import goodValue from "../image/goodValue.png";
 import pencil from "../image/pencil.png";
 import CheckNpkContainer from './CheckNpkContainer.jsx';
-import { GetSensorNames ,getPlantData ,addUserPlot ,GetPlotInfo, deletePlot, GetHistoryInfo, EditPlot, handleImageFileChange,calcNpkResult} from "./FirestoreDB.jsx";
+import { GetSensorNames ,getPlantData ,addUserPlot ,GetPlotInfo, deletePlot, EditPlot, handleImageFileChange,calcNpkResult} from "./FirestoreDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
 import { Link } from 'react-router-dom';
@@ -156,7 +156,7 @@ const LeftHistoryBar = () => {
             <RightHistoryBar viewingPlot={viewingPlot} refreshPlotList={refreshPlotList} viewingPlotName={viewingPlotName}
                 viewingPlotSensor={viewingPlotSensor} viewingPlotVeg={viewingPlotVeg} viewingPlotImage={viewingPlotImage}
             />
-            {false ? <CheckNpkContainer viewingPlotName={viewingPlotName}/>: " "}
+            {false ? <CheckNpkContainer viewingPlotName={viewingPlotName} viewingPlot={viewingPlot}/>: " "}
             {showAddPlotBox ? <><AddPlotBG onClick={showPlotBox}></AddPlotBG>
                                 <AddPlotBox refreshPlotList={refreshPlotList} showPlotBox={showPlotBox}/>
                                 </>: ""}
