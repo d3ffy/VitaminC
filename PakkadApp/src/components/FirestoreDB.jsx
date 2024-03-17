@@ -21,7 +21,6 @@ export const GetUserEmail = () => {
 
   return userEmail;
 };
-
 export const GetUserDocumentId = async (userEmail) => {
   const firestoreDB = getFirestore(firebaseApp);
   const userCollection = collection(firestoreDB, "user_DB");
@@ -37,7 +36,6 @@ export const GetUserDocumentId = async (userEmail) => {
 
   return null;
 };
-
 export const GetSensorNames = async () => {
   try{
     const firestoreDB = getFirestore(firebaseApp);
@@ -55,7 +53,7 @@ export const GetSensorNames = async () => {
       console.error("Error fetching sensor names:", error);
     };
 };
-
+// เอาชื่อ garden_name
 export const GetPlotData = async (userEmail) => {
   var userDocumentId = await GetUserDocumentId(userEmail);
 
@@ -86,6 +84,7 @@ export const GetPlotData = async (userEmail) => {
     return [];
   }
 };
+// เอาชื่อ doc ทั้งหมด ใน plot
 export const GetPlotInfo = async (userEmail) => {
   var userDocumentId = await GetUserDocumentId(userEmail);
 
@@ -103,8 +102,6 @@ export const GetPlotInfo = async (userEmail) => {
         plotData.push(plot);
       });
 
-      // console.log(plotData);
-      // console.log(userDocumentId);
       return plotData;
     } catch (error) {
       console.error("Error fetching plot data:", error);
@@ -159,6 +156,25 @@ export const GetHistoryInfo = async (userEmail , viewingPlot) =>{
     return [];
   }
 };
+export const getPlantData = async () => {
+  try {
+    const firestoreDB = getFirestore(firebaseApp);
+    const plantCollection = collection(firestoreDB, "plant_DB");
+    const querySnapshot = await getDocs(plantCollection);
+    const plantData = [];
+    querySnapshot.forEach((doc) => {
+      const plant = doc.data();
+      plant.id = doc.id;
+      plantData.push(plant);
+
+    });
+
+    return plantData ;
+  } catch (error) {
+    console.error("Error fetching plot data:", error);
+    return [];
+  }
+};
 
 export const AddNpkToPlotHistory = async (userEmail, viewingPlot, npkData) =>{
   var userDocumentId = await GetUserDocumentId(userEmail);
@@ -178,26 +194,6 @@ export const AddNpkToPlotHistory = async (userEmail, viewingPlot, npkData) =>{
   } else {
     console.log("User document ID is not available yet.");
     
-    return [];
-  }
-};
-
-export const getPlantData = async () => {
-  try {
-    const firestoreDB = getFirestore(firebaseApp);
-    const plantCollection = collection(firestoreDB, "plant_DB");
-    const querySnapshot = await getDocs(plantCollection);
-    const plantData = [];
-    querySnapshot.forEach((doc) => {
-      const plant = doc.data();
-      plant.id = doc.id;
-      plantData.push(plant);
-
-    });
-
-    return plantData ;
-  } catch (error) {
-    console.error("Error fetching plot data:", error);
     return [];
   }
 };
@@ -251,7 +247,6 @@ export const addUserPlot = async(userEmail, gardenName, file, sensorName, vegNam
     }
   }
 }
-
 export const deletePlot = async (userEmail, viewingPlot) => {
   const deleteImage = async () =>{
     const storage = getStorage();
@@ -302,7 +297,6 @@ export const saveImageURLToFirestore = async (userEmail, viewingPlot, imageURL) 
     }
   }
 };
-
 export const handleImageFileChange = async (userEmail,viewingPlot,file) => {
   if (file) {
     const storage = getStorage();
@@ -339,6 +333,105 @@ export const saveImageToStorage = async (file,plotId) => {
     const downloadURL = await getDownloadURL(snapshot.ref);
     return downloadURL;
   }
+};
+
+export const calcNpkResult = async (userEmail,viewingPlot) => {
+  const plotInfos = await GetPlotInfo(userEmail);
+  const historyData = await GetHistoryInfo(userEmail,viewingPlot);
+  const plantData = await getPlantData();
+  // เอาค่า sensor veg_name garden_name image id ของ viewingPlot 
+  let plotInfo = {} 
+  let plantInfo = {}
+  plotInfos.forEach((info) => {
+        if(info.id === viewingPlot){
+          plotInfo = info;
+        };
+  });
+  
+  plantData.forEach((plant) => {
+    if(plant.name === plotInfo.veg_name){
+      plantInfo = {
+        plantName: plant.name,
+        nitrogen_start: plant.nitrogen_start,
+        nitrogen_end: plant.nitrogen_end,
+        phosphorus_start: plant.phosphorus_start,
+        phosphorus_end: plant.phosphorus_end,
+        potassium_start: plant.potassium_start,
+        potassium_end: plant.potassium_end,
+      }
+    }
+  });
+  // console.log(plantInfo);
+
+  const calculateNpk = (startValue, endValue, targetValue) => {
+    if(targetValue < startValue){
+      return [false , startValue-targetValue , "lower"];
+    }else if(targetValue > startValue){
+      return [false , targetValue-startValue , "more"];
+    }else if(targetValue >= startValue && targetValue <= endValue){
+      return [true , 0 , "inRange"];
+    }else{
+      console.log("out of condition");
+    }
+  };
+  const [isNInRange, Ndiff ,Nstatus] = calculateNpk(50, 50, 50);
+
+
+  const calcNpkCollection = [];
+  historyData.forEach((row) => {
+
+    const [isNInRange, Ndiff ,Nstatus] = calculateNpk(plantInfo.nitrogen_start, plantInfo.nitrogen_end, row.nitrogen);
+    let Nsumary;
+    switch(Nstatus){
+      case "lower":
+        Nsumary = "N < "+Ndiff;
+        break;
+      case "more":
+        Nsumary = "N < "+Ndiff;
+        break;
+      case "inRange":
+        Nsumary = "N is In Range";
+        break;
+    }
+    const [isPInRange, Pdiff ,Pstatus] = calculateNpk(plantInfo.phosphorus_start, plantInfo.phosphorus_end, row.phosphorus);
+    let Psumary;
+    switch(Pstatus){
+      case "lower":
+        Psumary = "P < "+Pdiff;
+        break;
+      case "more":
+        Psumary = "P < "+Pdiff;
+        break;
+      case "inRange":
+        Psumary = "P is In Range";
+        break;
+    }
+    const [isKInRange, Kdiff ,Kstatus] = calculateNpk(plantInfo.potassium_start, plantInfo.potassium_end, row.potassium);
+    let Ksumary;
+    switch(Kstatus){
+      case "lower":
+        Ksumary = "K < "+Kdiff;
+        break;
+      case "more":
+        Ksumary = "K < "+Kdiff;
+        break;
+      case "inRange":
+        Ksumary = "K is In Range";
+        break;
+    }
+    const historyItem = {
+      id: row.id,
+      nitrogen: row.nitrogen,
+      phosphorus: row.phosphorus,
+      potassium: row.potassium,
+      summary : Nsumary+" | "+Psumary+" | "+Ksumary,
+      date: row.date,
+      status: isNInRange && isPInRange && isKInRange ?true:false,
+    };
+    calcNpkCollection.push(historyItem);
+  });
+
+  return calcNpkCollection;
 };
 
 const FirestoreDB = () => {

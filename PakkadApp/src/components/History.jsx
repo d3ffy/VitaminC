@@ -5,7 +5,7 @@ import BadValue from "../image/badValue.png";
 import goodValue from "../image/goodValue.png";
 import pencil from "../image/pencil.png";
 import CheckNpkContainer from './CheckNpkContainer.jsx';
-import { GetSensorNames ,getPlantData ,addUserPlot ,GetPlotInfo, deletePlot, GetHistoryInfo, EditPlot, handleImageFileChange} from "./FirestoreDB.jsx";
+import { GetSensorNames ,getPlantData ,addUserPlot ,GetPlotInfo, deletePlot, GetHistoryInfo, EditPlot, handleImageFileChange,calcNpkResult} from "./FirestoreDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
 import { Link } from 'react-router-dom';
@@ -277,7 +277,7 @@ const AddPlotBox = ({ refreshPlotList , showPlotBox}) => {
 
     const addPlot = () => {
         // (user.email, plotName, "./path/Image", selectSensor, "")
-        addUserPlot(user.email, plotName, imageUrl, selectSensor, "ผักกาด");
+        addUserPlot(user.email, plotName, imageUrl, selectSensor, "ผักคอส");
         refreshPlotList();
         showPlotBox();
     };
@@ -492,14 +492,15 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
     useEffect(() => {
         const fetchHistoryData = async () => {
             if (user && user.email) {
-                const data = await GetHistoryInfo(user.email, viewingPlot);
+                const data = await calcNpkResult(user.email, viewingPlot);
                 const formattedRows = data.map((item) => [
                     item.date,
                     item.nitrogen,
                     item.phosphorus,
                     item.potassium,
-                    'N , K ไม่เหมาะสม', 
-                    <StatusImg src={BadValue}></StatusImg>,
+                    item.summary, 
+                    item.status ?<StatusImg src={goodValue}></StatusImg>
+                                :<StatusImg src={BadValue}></StatusImg>,
                 ]);
             setRows(formattedRows);
             }
