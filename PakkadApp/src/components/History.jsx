@@ -157,9 +157,10 @@ const LeftHistoryBar = () => {
                 viewingPlotSensor={viewingPlotSensor} viewingPlotVeg={viewingPlotVeg} viewingPlotImage={viewingPlotImage}
             />
             {false ? <CheckNpkContainer viewingPlotName={viewingPlotName} viewingPlot={viewingPlot}/>: " "}
-            {showAddPlotBox ? <><AddPlotBG onClick={showPlotBox}></AddPlotBG>
+            {showAddPlotBox ? <><AddPlotBG onClick={showPlotBox}>
                                 <AddPlotBox refreshPlotList={refreshPlotList} showPlotBox={showPlotBox}/>
-                                </>: ""}
+                                </AddPlotBG></>
+                            : ""}
         </>
     )
 }
@@ -174,15 +175,13 @@ const AddPlotBtnContainer = styled.div`
     z-index: 3;
 `;
 const Card = styled.div`
-    position: fixed;
     background-color: var(--subTextColor);
     width: 100%;
+    /* height: 100%; */
     max-width: 625px;
+    max-width: 40%;
     height: max-content;
-    top: 50%;
-    right: 20%;
-    transform: translate(-50%, -50%);
-    margin-top: 30px;
+    margin: 11vh auto;
     border-radius: 20px;
     box-shadow: 0px 0px 30px -7px rgba(0, 0, 0, 0.25);
     display: flex;
@@ -190,6 +189,9 @@ const Card = styled.div`
     align-items: center;
     padding: 5% 3% 10% 3%;
     z-index: 3;
+    /* top: 50%; */
+    /* right: 50%; */
+    /* transform: translate(-50%, -50%); */
 `;
 const FormContainer = styled.form`
     display: flex;
@@ -326,8 +328,9 @@ const RightContainer = styled.div`
     flex-direction: column;
     margin: 0 auto;
     margin-top: 7vh;
-    min-width: max-content;
+    /* min-width: max-content; */
     width: 70.19vw;
+    overflow: hidden;
 `;
 const PlotInformation = styled.div`
     display: flex;
@@ -619,6 +622,7 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
 
 const Container = styled.div`
     display: flex;
+    width: 100vw;
 `;
 const StyledH1 = styled(Link)`
     font-weight: bold;
