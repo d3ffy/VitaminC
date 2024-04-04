@@ -8,8 +8,12 @@ const char* WIFI_PASS = "FreeWifi";
 // Firebase Credentials and Configuration as constants
 const char* API_KEY = "AIzaSyCPkTRiFpWFcjuJvAiOZCqoMXJN2Gvtzjc";
 const char* DATABASE_URL = "https://vitaminc-4695a-default-rtdb.asia-southeast1.firebasedatabase.app/";
+const char* PROJECT_ID = "vitaminc-4695a";
 const char* USER_EMAIL = "12345@gmail.com";
 const char* USER_PASSWORD = "12345";
+
+// Define sensor's name for Firebase
+const char* SENSOR_NAME = "sensor-test";
 
 // Define Pin Number as a constant
 const byte redLED = 13;
@@ -22,28 +26,23 @@ FirebaseConfig config;
 void setup() {
   Serial.begin(9600);
   pinMode(redLED, OUTPUT);
-  connectWiFi(); // Initial WiFi Connect
-  
-  // Firebase Setup
-  config.api_key = API_KEY;
-  config.database_url = DATABASE_URL;
-  auth.user.email = USER_EMAIL;
-  auth.user.password = USER_PASSWORD;
 
-  Firebase.begin(&config, &auth);
-  Firebase.reconnectWiFi(true);
+  // WiFi & Firebase Setup
+  WiFi.mode(WIFI_STA);
+  connectWiFi(); 
+  connectFirebase();
 }
 
 void loop() {
   static String receivedMessage; // Use static to keep it between calls but avoid global scope
 
-  while (WiFi.status() == WL_CONNECTED) {
+  while (WiFi.status() == WL_CONNECTED && Firebase.ready()) {
     messageHandler(receivedMessage);
     functionHandler(receivedMessage);
     receivedMessage = ""; // Clear the message
-    delay(1000);
   }
   connectWiFi();
+  connectFirebase();
 }
 
 void messageHandler(String& receivedMessage) {
@@ -67,14 +66,43 @@ void functionHandler(const String& receivedMessage) {
 }
 
 void connectWiFi() {
-  WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.print(F("Connecting to WiFi"));
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print('.');
+    Serial.print(".");
     delay(1000);
   }
   Serial.println();
-  Serial.print(F("Connected to IP Address: "));
+  Serial.print(F("Connected to: "));
   Serial.println(WiFi.localIP());
+}
+
+void connectFirebase() {
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_URL;
+  auth.user.email = USER_EMAIL;
+  auth.user.password = USER_PASSWORD;
+
+  if (!Firebase.ready()) {
+    Serial.println(F("Trying to connect to Firebase..."));
+    Firebase.begin(&config, &auth);
+    Firebase.reconnectWiFi(true);
+  }
+}
+
+void sentColorToFirebase() {
+  // Setting up the JSON object
+  FirebaseJson json;
+  json.set("sensor_name", SENSOR_NAME);
+  json.set("email", USER_EMAIL);
+  json.set("red", "int-red");
+  json.set("blue", "int-blue");
+  json.set("green", "int-green");
+
+  String path = String("sensor_DB/") + SENSOR_NAME;
+  if (Firebase.Firestore.createDocument(&fbdo, PROJECT_ID, "", path, json.raw())) {
+    Serial.println(F("Create history success."));
+  } else {
+    Serial.println(fbdo.errorReason());
+  }
 }
