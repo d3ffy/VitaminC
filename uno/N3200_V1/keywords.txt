@@ -1,0 +1,32 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+
+#######################################
+# Class Calling (KEYWORD1)
+#######################################
+
+N3200	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	KEYWORD2
+read	KEYWORD2
+filter	KEYWORD2
+frequency_scaling	KEYWORD2
+calibrate KEYWORD2
+calibrate_dark KEYWORD2
+calibrate_light KEYWORD2
+######################################
+# Constants (LITERAL1)
+#######################################
+HI	LITERAL1
+MID	LITERAL1
+LOW	LITERAL1
+OFF	LITERAL1
+RED	LITERAL1
+GREEN	LITERAL1
+BLUE	LITERAL1
+CLEAR	LITERAL1
+

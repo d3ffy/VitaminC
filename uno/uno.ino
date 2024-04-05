@@ -1,88 +1,111 @@
 // Arduino
-const int blueLED = 11;
-const int greenLED = 12;
-const int redLED = 13;
+#include <N3200.h>
 
-const int whiteLED = 2;
-const int S0 = 3;
-const int S1 = 4;
-const int out = 5;
-const int S2 = 6;
-const int S3 = 7;
+#define blueLED 11
+#define greenLED 12
+#define redLED 13
+#define whiteLED 2
 
-// Define int variables
-int redValue = 0;
-int greenValue = 0;
-int blueValue = 0;
-int frequency = 0;
+#define S0 3
+#define S1 4
+#define S2 6
+#define S3 7
+#define out 5
 
+N3200 ColorSensor(S0, S1, S2, S3, out);
 void setup() {
+  // Pin define
   pinMode(redLED, OUTPUT);
   pinMode(greenLED, OUTPUT);
   pinMode(blueLED, OUTPUT);
-
+  pinMode(whiteLED, OUTPUT);
   pinMode(S0, OUTPUT);
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
   pinMode(S3, OUTPUT);
   pinMode(out, INPUT);
-  pinMode(whiteLED, OUTPUT);
-  
-  digitalWrite(whiteLED, LOW);
-  digitalWrite(S0, HIGH);
-  Serial.begin(9600);
+  Serial.begin(115200);
+
+  // Color Sensor Setup
+  ColorSensor.begin();
+  ColorSensor.frequency_scaling(LO);
+  calibrateSensor();
 }
 
 void loop() {
-  while (Serial.availableForWrite()) {
+  String receivedMessage;
+  messageHandler(receivedMessage);
+  functionHandler(receivedMessage);
+}
 
-    getColorValue();
-    Serial.print("Red Freq = ");
-    Serial.print(redValue); 
-    Serial.print("   ");
-    Serial.print("Green Freq = ");
-    Serial.print(greenValue); 
-    Serial.print("   ");
-    Serial.print("Blue Freq = ");
-    Serial.println(blueValue); 
+void calibrateSensor() {
+
+  // Color Sensor Calibration
+  Serial.println(F("Calibrating the sensor. . ."));
+
+  // Calibrate lowest light
+  Serial.println(F("Face Dark surface // turn off all light"));
+  delay(1000);
+  ColorSensor.calibrate_dark();
+  delay(1000);
+
+  // Calibrate highest light
+  Serial.println(F("Face white surface // turn on all light"));
+  delay(1000);
+  ColorSensor.calibrate_light();
+  delay(1000);
+
+  // Calibrate the sensor from light/dark value
+  ColorSensor.calibrate();
+  delay(500);
+  Serial.println(F("Calibration done"));
+}
+
+void messageHandler(String& receivedMessage) {
+  if (Serial.available() > 0) {
+    receivedMessage = Serial.readStringUntil('\n');
   }
 }
 
-int getRed() {
-  digitalWrite(redLED, HIGH);
-  digitalWrite(S2,LOW);
-  digitalWrite(S3,LOW);
-  delay(1000);
-  frequency = pulseIn(out, LOW); // Get the Red Color Frequency
-  digitalWrite(redLED, LOW);
-  return frequency;
-}
-
-int getGreen() {
-  digitalWrite(greenLED, HIGH);
-  digitalWrite(S2,HIGH);
-  digitalWrite(S3,HIGH);
-  delay(1000);
-  frequency = pulseIn(out, LOW); // Get the Green Color Frequency
-  digitalWrite(greenLED, LOW);
-  return frequency;
-}
-
-int getBlue() {
-  digitalWrite(blueLED, HIGH);
-  digitalWrite(S2,LOW);
-  digitalWrite(S3,HIGH);
-  delay(1000);
-  frequency = pulseIn(out, LOW); // Get the Blue Color Frequency
-  digitalWrite(blueLED, LOW);
-  return frequency;
+void functionHandler(const String& receivedMessage) {
+  if (receivedMessage.startsWith("READ")) {
+    getColorValue();
+  } else if (receivedMessage.startsWith("CALIBRATE")) {
+    calibrateSensor();
+  }
 }
 
 void getColorValue() {
-  redValue = getRed();
-  delay(500); 
-  greenValue = getGreen();
-  delay(500); 
-  blueValue = getBlue();
-  delay(500); 
+  int redValue = 0, greenValue = 0, blueValue = 0;
+  // Turn red LED & read RED value
+  digitalWrite(redLED, HIGH);
+  delay(500);
+  redValue = ColorSensor.read(RED);
+  delay(500);
+  digitalWrite(redLED, LOW);
+  delay(500);
+  // Turn green LED & read GREEN value
+  digitalWrite(greenLED, HIGH);
+  delay(500);
+  greenValue = ColorSensor.read(GREEN);
+  delay(500);
+  digitalWrite(greenLED, LOW);
+  delay(500);
+  // Turn blue LED & read BLUE value
+  digitalWrite(blueLED, HIGH);
+  delay(500);
+  blueValue = ColorSensor.read(BLUE); 
+  delay(500);
+  digitalWrite(blueLED, LOW);
+  
+  String output = "VALUE RED=" + String(redValue) 
+                  + " GREEN=" + String(greenValue) 
+                  + " BLUE=" + String(blueValue);
+                  
+  if (Serial.availableForWrite() > output.length() + 2) { // To ensure the buffer is not full & +2 is newline
+    Serial.println(output);
+  } else if (Serial.availableForWrite() <= output.length() + 2) {
+    Serial.println(F("ERROR: Serial buffer is full. Please wait & try again"));
+    Serial.read();
+  }
 }
