@@ -23,6 +23,12 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+// Setting up Firebase Database
+config.api_key = API_KEY;
+config.database_url = DATABASE_URL;
+auth.user.email = USER_EMAIL;
+auth.user.password = USER_PASSWORD;
+
 void setup() {
   Serial.begin(115200);
 
@@ -92,10 +98,6 @@ void connectWiFi() {
 }
 
 void connectFirebase() {
-  config.api_key = API_KEY;
-  config.database_url = DATABASE_URL;
-  auth.user.email = USER_EMAIL;
-  auth.user.password = USER_PASSWORD;
 
   if (!Firebase.ready()) {
     Serial.println(F("Trying to connect to Firebase..."));
