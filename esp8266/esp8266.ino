@@ -9,8 +9,8 @@ const char* WIFI_PASS = "FreeWifi";
 const char* API_KEY = "AIzaSyCPkTRiFpWFcjuJvAiOZCqoMXJN2Gvtzjc";
 const char* DATABASE_URL = "https://vitaminc-4695a-default-rtdb.asia-southeast1.firebasedatabase.app/";
 const char* PROJECT_ID = "vitaminc-4695a";
-const char* USER_EMAIL = "12345@gmail.com";
-const char* USER_PASSWORD = "12345";
+const char* USER_EMAIL = "test12@gmail.com";
+const char* USER_PASSWORD = "123456";
 
 // Define sensor's name for Firebase
 const char* SENSOR_NAME = "sensor-test";
@@ -24,7 +24,7 @@ FirebaseAuth auth;
 FirebaseConfig config;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   pinMode(redLED, OUTPUT);
 
   // WiFi & Firebase Setup
@@ -52,16 +52,10 @@ void messageHandler(String& receivedMessage) {
 }
 
 void functionHandler(const String& receivedMessage) {
-  if (receivedMessage.startsWith("RED")) {
-    Serial.println(F("Blink red color"));
-    digitalWrite(redLED, HIGH);
-  } else if (receivedMessage.startsWith("GREEN")) {
-    Serial.println(F("Blink green color"));
-  } else if (receivedMessage.startsWith("BLUE")) {
-    Serial.println(F("Blink blue color"));
-  } else if (receivedMessage.length() > 0) {
-    Serial.print(F("Received: "));
-    Serial.println(receivedMessage);
+  if (receivedMessage.startsWith("VALUE")) {
+    int nitrogen, phosphorus, potassium;
+    sscanf(receivedMessage.c_str(), "VALUE N=%d P=%d K=%d", &nitrogen, &phosphorus, &potassium);
+    
   }
 }
 
@@ -90,14 +84,14 @@ void connectFirebase() {
   }
 }
 
-void sentColorToFirebase() {
+void sentValueToFirebase(const String& nitrogen, const String& phosphorus, const String& potassium) {
   // Setting up the JSON object
   FirebaseJson json;
   json.set("sensor_name", SENSOR_NAME);
   json.set("email", USER_EMAIL);
-  json.set("red", "int-red");
-  json.set("blue", "int-blue");
-  json.set("green", "int-green");
+  json.set("nitrogen", nitrogen);
+  json.set("phosphorus", phosphorus);
+  json.set("potassium", potassium);
 
   String path = String("sensor_DB/") + SENSOR_NAME;
   if (Firebase.Firestore.createDocument(&fbdo, PROJECT_ID, "", path, json.raw())) {

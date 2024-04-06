@@ -98,9 +98,9 @@ void getColorValue() {
   delay(500);
   digitalWrite(blueLED, LOW);
   
-  String output = "VALUE RED=" + String(redValue) 
-                  + " GREEN=" + String(greenValue) 
-                  + " BLUE=" + String(blueValue);
+  String output = "VALUE N=" + String(redValue) 
+                  + " P=" + String(greenValue) 
+                  + " K=" + String(blueValue);
                   
   if (Serial.availableForWrite() > output.length() + 2) { // To ensure the buffer is not full & +2 is newline
     Serial.println(output);
