@@ -1,6 +1,9 @@
 #include <ESP8266WiFi.h>
 #include <Firebase_ESP_Client.h>
 
+// Provide the RTDB payload printing info and other helper functions.
+#include <addons/RTDBHelper.h>
+
 // WiFi Credentials as constants
 const char* WIFI_SSID = "deffy's room";
 const char* WIFI_PASS = "FreeWifi";
@@ -15,9 +18,6 @@ const char* USER_PASSWORD = "123456";
 // Define sensor's name for Firebase
 const char* SENSOR_NAME = "sensor-test";
 
-// Define Pin Number as a constant
-const byte redLED = 13;
-
 // Firebase objects as global to initialize once
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -25,7 +25,6 @@ FirebaseConfig config;
 
 void setup() {
   Serial.begin(115200);
-  pinMode(redLED, OUTPUT);
 
   // WiFi & Firebase Setup
   WiFi.mode(WIFI_STA);
@@ -52,10 +51,31 @@ void messageHandler(String& receivedMessage) {
 }
 
 void functionHandler(const String& receivedMessage) {
+  // Handling received message from Arduino
   if (receivedMessage.startsWith("VALUE")) {
-    int nitrogen, phosphorus, potassium;
+    // Mapping the received message to the variables
+    String nitrogen, phosphorus, potassium;
     sscanf(receivedMessage.c_str(), "VALUE N=%d P=%d K=%d", &nitrogen, &phosphorus, &potassium);
+
+    sentValueToFirebase(nitrogen, phosphorus, potassium);
+
+    // Change the command to NONE after sending the value
+    if (Firebase.RTDB.setString(&fbdo, String(SENSOR_NAME) + "/command", "NONE")) {
+      Serial.println(F("Changing command to NONE."));
+    } else {
+      Serial.println(fbdo.errorReason());
+    }
     
+  // Handling command request from user
+  } else if (Firebase.RTDB.getString(&fbdo, String(SENSOR_NAME) + "/command")) {
+      // Checking READ command
+      if (fbdo.to<const char *>() == "READ") {
+        Serial.println(F("READ request from user."));
+        // Avoiding multiple READ request
+        if (Firebase.RTDB.setString(&fbdo, String(SENSOR_NAME) + "/command", "PROCESS")) {
+          Serial.println(F("Changing command to PROCESS"));
+        } else { Serial.println(fbdo.errorReason()); }
+      }
   }
 }
 
@@ -93,7 +113,7 @@ void sentValueToFirebase(const String& nitrogen, const String& phosphorus, const
   json.set("phosphorus", phosphorus);
   json.set("potassium", potassium);
 
-  String path = String("sensor_DB/") + SENSOR_NAME;
+  String path = String("history_DB/");
   if (Firebase.Firestore.createDocument(&fbdo, PROJECT_ID, "", path, json.raw())) {
     Serial.println(F("Create history success."));
   } else {
