@@ -82,7 +82,17 @@ void functionHandler(const String& receivedMessage) {
         if (Firebase.RTDB.setString(&fbdo, path_RTDB, "PROCESS")) {
           Serial.println(F("Changing command to PROCESS"));
         } else { 
-          Firebase.RTDB.setString(&fbdo, path_RTDB, "NONE");
+          Firebase.RTDB.setString(&fbdo, path_RTDB, "ERROR - Failed to Process");
+          Serial.println(fbdo.errorReason()); 
+          }
+      // Checking CALIBRATE command
+      } else if (fbdo.stringData() == "CALIBRATE") {
+        Serial.println("Calibrate request from user.");
+
+        if (Firebase.RTDB.setString(&fbdo, path_RTDB, "PROCESS")) {
+          Serial.println(F("Changing command to PROCESS"));
+        } else { 
+          Firebase.RTDB.setString(&fbdo, path_RTDB, "ERROR - Failed to Process");
           Serial.println(fbdo.errorReason()); 
           }
       }
@@ -118,11 +128,11 @@ void connectFirebase() {
 void sentValueToFirebase(const String& nitrogen, const String& phosphorus, const String& potassium) {
   // Setting up the JSON object
   FirebaseJson json;
-  json.set("sensor_name", SENSOR_NAME);
-  json.set("email", USER_EMAIL);
-  json.set("nitrogen", nitrogen);
-  json.set("phosphorus", phosphorus);
-  json.set("potassium", potassium);
+  json.add("sensor_name", SENSOR_NAME);
+  json.add("email", USER_EMAIL);
+  json.add("nitrogen", nitrogen);
+  json.add("phosphorus", phosphorus);
+  json.add("potassium", potassium);
 
   String path = String("user_DB/");
   path += auth.token.uid.c_str(); // user id
@@ -136,10 +146,12 @@ void sentValueToFirebase(const String& nitrogen, const String& phosphorus, const
 
 void initRTDB() {
   Serial.println("Initializing RTDB.");
-  path = "/" + String(auth.token.uid.c_str()) + "/";
-  if (Firebase.RTDB.setString(&fbdo, path + SENSOR_NAME + "/COMMAND", "NONE")) {
+  path_RTDB = "/" + String(auth.token.uid.c_str()) + "/";
+  // Create RTDB path
+  if (Firebase.RTDB.setString(&fbdo, path_RTDB + SENSOR_NAME + "/COMMAND", "NONE")) {
+    // If success, change global RTDB path
     Serial.println(F("Initialize RTDB Successfully"));
-    path += SENSOR_NAME + "/COMMAND";
+    path_RTDB += String(SENSOR_NAME) + "/COMMAND"; 
   } else {
     Serial.println(fbdo.errorReason());
   }
