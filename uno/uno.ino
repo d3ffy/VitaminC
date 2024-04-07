@@ -58,7 +58,10 @@ void calibrateSensor() {
   // Calibrate the sensor from light/dark value
   ColorSensor.calibrate();
   delay(500);
+  digitalWrite(greenLED, HIGH);
   Serial.println(F("Calibration done"));
+  delay(500);
+  digitalWrite(greenLED, LOW);
 }
 
 void messageHandler(String& receivedMessage) {
