@@ -18,7 +18,7 @@ const char* USER_EMAIL = "test12@gmail.com";
 const char* USER_PASSWORD = "123456";
 
 // Define sensor's name for Firebase
-const char* SENSOR_NAME = "sensor-test";
+const char* SENSOR_NAME = "sensor_lnwza";
 
 // Define RTDB path
 // /{uid}/SENSOR_NAME/COMMAND
@@ -28,11 +28,6 @@ String path_RTDB;
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
-
-// Component to avoid fetching all time
-unsigned long lastFetchTime = 0;
-unsigned long currentTime = millis();
-const unsigned long fetchTime = 5000;
 
 void setup() {
   Serial.begin(115200);
@@ -47,11 +42,10 @@ void setup() {
 void loop() {
   static String receivedMessage; // Use static to keep it between calls but avoid global scope
 
-  while (WiFi.status() == WL_CONNECTED && Firebase.ready()) {
+  while (WiFi.status() == WL_CONNECTED) {
     messageHandler(receivedMessage);
     functionHandler(receivedMessage);
     receivedMessage = ""; // Clear the message
-    currentTime = millis();
   }
   connectWiFi();
   connectFirebase();
@@ -64,45 +58,46 @@ void messageHandler(String& receivedMessage) {
 }
 
 void functionHandler(const String& receivedMessage) {
+
   // Handling received message from Arduino
   if (receivedMessage.startsWith("VALUE")) {
     // Mapping the received message to the variables
-    String nitrogen, phosphorus, potassium;
+    int nitrogen, phosphorus, potassium;
     sscanf(receivedMessage.c_str(), "VALUE N=%d P=%d K=%d", &nitrogen, &phosphorus, &potassium);
 
+    // Sent value to Firebase
     sentValueToFirebase(nitrogen, phosphorus, potassium);
-
+    
     // Change the command to NONE after sending the value
-    if (Firebase.RTDB.setString(&fbdo, path_RTDB, "NONE")) {
-      Serial.println(F("Changing command to NONE."));
+    if (Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "NONE")) {
+      Serial.println(F("Changing command to NONE"));
     } else {
       Serial.println(fbdo.errorReason());
     }
     
   // Handling command request from user
-  } else if (Firebase.RTDB.getString(&fbdo, path_RTDB) && currentTime - lastFetchTime > fetchTime) {
+  } else if (Firebase.RTDB.getString(&fbdo, path_RTDB + "/COMMAND")) {
       // Checking READ command
       if (fbdo.stringData() == "READ") {
-        Serial.println(F("READ request from user."));
+        Serial.println(F("READ request"));
         // Avoiding multiple READ request
-        if (Firebase.RTDB.setString(&fbdo, path_RTDB, "PROCESS")) {
+        if (Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "PROCESS")) {
           Serial.println(F("Changing command to PROCESS"));
         } else { 
-          Firebase.RTDB.setString(&fbdo, path_RTDB, "ERROR - Failed to Process");
+          Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "ERROR");
           Serial.println(fbdo.errorReason()); 
           }
       // Checking CALIBRATE command
       } else if (fbdo.stringData() == "CALIBRATE") {
-        Serial.println("Calibrate request from user.");
+        Serial.println(F("CALIBRATE request"));
 
-        if (Firebase.RTDB.setString(&fbdo, path_RTDB, "PROCESS")) {
+        if (Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "PROCESS")) {
           Serial.println(F("Changing command to PROCESS"));
         } else { 
-          Firebase.RTDB.setString(&fbdo, path_RTDB, "ERROR - Failed to Process");
+          Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "ERROR");
           Serial.println(fbdo.errorReason()); 
           }
       }
-      lastFetchTime = currentTime;
   }
 }
 
@@ -110,12 +105,11 @@ void connectWiFi() {
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.print(F("Connecting to WiFi"));
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
+    Serial.print(F("."));
     delay(1000);
   }
   Serial.println();
-  Serial.print(F("Connected to: "));
-  Serial.println(WiFi.localIP());
+  Serial.println(F("WiFi Connected"));
 }
 
 void connectFirebase() {
@@ -126,39 +120,30 @@ void connectFirebase() {
   auth.user.password = USER_PASSWORD;
 
   if (!Firebase.ready()) {
-    Serial.println(F("Connecting to Firebase..."));
+    Serial.println(F("Connecting to Firebase"));
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
   }
 }
 
-void sentValueToFirebase(const String& nitrogen, const String& phosphorus, const String& potassium) {
-  // Setting up the JSON object
-  FirebaseJson json;
-  json.add("sensor_name", SENSOR_NAME);
-  json.add("email", USER_EMAIL);
-  json.add("nitrogen", nitrogen);
-  json.add("phosphorus", phosphorus);
-  json.add("potassium", potassium);
-
-  String path = String("user_DB/");
-  path += auth.token.uid.c_str(); // user id
-  path += String("/sensor_DB");
-  if (Firebase.Firestore.createDocument(&fbdo, PROJECT_ID, "", path, json.raw())) {
-    Serial.println(F("Create history success."));
+void sentValueToFirebase(const int& nitrogen, const int& phosphorus, const int& potassium) {
+  // Sent value to RTDB
+  if (Firebase.RTDB.setInt(&fbdo, path_RTDB + "/nitrogen", nitrogen) &&
+      Firebase.RTDB.setInt(&fbdo, path_RTDB + "/phosphorus", phosphorus) &&
+      Firebase.RTDB.setInt(&fbdo, path_RTDB + "/potassium", potassium)){
+    Serial.println(F("Sent value to Firebase successfully."));
   } else {
-    Serial.println(fbdo.errorReason());
-  }
+    Serial.println(fbdo.errorReason());}
 }
 
 void initRTDB() {
-  Serial.println("Initializing RTDB.");
+  Serial.println(F("Initializing RTDB"));
   path_RTDB = "/" + String(auth.token.uid.c_str()) + "/";
   // Create RTDB path
   if (Firebase.RTDB.setString(&fbdo, path_RTDB + SENSOR_NAME + "/COMMAND", "NONE")) {
     // If success, change global RTDB path
     Serial.println(F("Initialize RTDB Successfully"));
-    path_RTDB += String(SENSOR_NAME) + "/COMMAND"; 
+    path_RTDB += String(SENSOR_NAME); 
   } else {
     Serial.println(fbdo.errorReason());
   }
