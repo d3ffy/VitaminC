@@ -20,15 +20,16 @@ const char* USER_PASSWORD = "123456";
 // Define sensor's name for Firebase
 const char* SENSOR_NAME = "sensor_lnwza";
 
-// Define RTDB path
-// /{uid}/SENSOR_NAME/COMMAND
-String path_RTDB;
-
 // Firebase objects as global to initialize once
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+// Define RTDB path
+// /{uid}/SENSOR_NAME/COMMAND
+String path_RTDB;
+
+unsigned long lastFetch;
 void setup() {
   Serial.begin(115200);
 
@@ -37,6 +38,7 @@ void setup() {
   connectWiFi(); 
   connectFirebase();
   initRTDB();
+  initFirestore();
 }
 
 void loop() {
@@ -76,7 +78,7 @@ void functionHandler(const String& receivedMessage) {
     }
     
   // Handling command request from user
-  } else if (Firebase.RTDB.getString(&fbdo, path_RTDB + "/COMMAND")) {
+  } else if (Firebase.RTDB.getString(&fbdo, path_RTDB + "/COMMAND") && millis() - lastFetch > 5000) {
       // Checking READ command
       if (fbdo.stringData() == "READ") {
         Serial.println(F("READ request"));
@@ -98,6 +100,8 @@ void functionHandler(const String& receivedMessage) {
           Serial.println(fbdo.errorReason()); 
           }
       }
+      lastFetch = millis();
+
   }
 }
 
@@ -131,20 +135,66 @@ void sentValueToFirebase(const int& nitrogen, const int& phosphorus, const int& 
   if (Firebase.RTDB.setInt(&fbdo, path_RTDB + "/nitrogen", nitrogen) &&
       Firebase.RTDB.setInt(&fbdo, path_RTDB + "/phosphorus", phosphorus) &&
       Firebase.RTDB.setInt(&fbdo, path_RTDB + "/potassium", potassium)){
-    Serial.println(F("Sent value to Firebase successfully."));
+    Serial.println(F("Sent value to RTDB successfully."));
   } else {
     Serial.println(fbdo.errorReason());}
 }
 
 void initRTDB() {
   Serial.println(F("Initializing RTDB"));
-  path_RTDB = "/" + String(auth.token.uid.c_str()) + "/";
+  path_RTDB += "/" + String(auth.token.uid.c_str()) + "/" + SENSOR_NAME;
   // Create RTDB path
-  if (Firebase.RTDB.setString(&fbdo, path_RTDB + SENSOR_NAME + "/COMMAND", "NONE")) {
-    // If success, change global RTDB path
+  if (Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "NONE")) {
     Serial.println(F("Initialize RTDB Successfully"));
-    path_RTDB += String(SENSOR_NAME); 
   } else {
     Serial.println(fbdo.errorReason());
   }
 }
+
+void initFirestore() {
+  // Checking initialized name
+  Serial.println(F("Initializing Firestore"));
+
+  if (!checkSensorName()) {
+    // If sensor name isn't initialized
+    String path = "user_DB/" + String(auth.token.uid.c_str()) + "/sensor_DB";
+    FirebaseJson json;
+    json.set("fields/name/stringValue", SENSOR_NAME);
+    if (Firebase.Firestore.createDocument(&fbdo, PROJECT_ID, "", path, json.raw())) {
+      Serial.println("Create Successfully");
+    } else {
+      Serial.println(fbdo.errorReason());
+    }
+  } else {
+    Serial.println(F("Sensor name already initialzed!"));
+  }
+}
+
+bool checkSensorName() {
+  String path = "user_DB/" + String(auth.token.uid.c_str()) + "/sensor_DB";
+  if (Firebase.Firestore.getDocument(&fbdo, PROJECT_ID, "", path, "name")) {
+    FirebaseJson json;
+    FirebaseJsonData jsonData;
+
+    json.setJsonData(fbdo.payload().c_str());
+    
+    if (json.get(jsonData, "documents")) {
+      
+      for (uint8_t i = 0; i < 20; i++) {
+        String jsonPath = "documents/[" + String(i) + "]/fields/name/stringValue";
+        if (json.get(jsonData, jsonPath.c_str())) {
+          if (!jsonData.stringValue.isEmpty()) {
+            if (jsonData.stringValue.equalsIgnoreCase(SENSOR_NAME)) { 
+              return true; // Match found, return true immediately
+            }
+          }
+        }
+      }
+    }
+  } else {
+    Serial.println(fbdo.errorReason());
+  }
+
+  return false; // No match found, return false
+}
+
