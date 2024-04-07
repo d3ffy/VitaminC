@@ -29,6 +29,11 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+// Component to avoid fetching all time
+unsigned long lastFetchTime = 0;
+unsigned long currentTime = millis();
+const unsigned long fetchTime = 5000;
+
 void setup() {
   Serial.begin(115200);
 
@@ -46,6 +51,7 @@ void loop() {
     messageHandler(receivedMessage);
     functionHandler(receivedMessage);
     receivedMessage = ""; // Clear the message
+    currentTime = millis();
   }
   connectWiFi();
   connectFirebase();
@@ -74,7 +80,7 @@ void functionHandler(const String& receivedMessage) {
     }
     
   // Handling command request from user
-  } else if (Firebase.RTDB.getString(&fbdo, path_RTDB)) {
+  } else if (Firebase.RTDB.getString(&fbdo, path_RTDB) && currentTime - lastFetchTime > fetchTime) {
       // Checking READ command
       if (fbdo.stringData() == "READ") {
         Serial.println(F("READ request from user."));
@@ -96,6 +102,7 @@ void functionHandler(const String& receivedMessage) {
           Serial.println(fbdo.errorReason()); 
           }
       }
+      lastFetchTime = currentTime;
   }
 }
 
