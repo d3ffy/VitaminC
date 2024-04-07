@@ -197,4 +197,3 @@ bool checkSensorName() {
 
   return false; // No match found, return false
 }
-
