@@ -2,7 +2,7 @@ import React , { useState , useEffect } from "react";
 import styled from 'styled-components';
 import GoodImg from '../image/goodValue.png';
 import BadImg from '../image/badValue.png';
-import { GetPlotInfo, AddNpkToPlotHistory, GetPlotData,GetPlotDocByID,GetSensorNames ,calcNpkResultStatusMainPage } from "./FirestoreDB.jsx";
+import { GetPlotInfo, AddNpkToPlotHistory, GetPlotData,GetPlotDocByID, GetSensorNames ,calcNpkResultStatusMainPage, getSensorOfUser } from "./FirestoreDB.jsx";
 import  {GetNpkFromRealtimeDB} from "./RealtimeDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
@@ -61,7 +61,7 @@ const CheckNpkBtn = styled(BaseBtn)`
     color: var(--subTextColor);
     background-color: var(--mainColor);
     &:hover{
-        background-color: #F44336;
+        background-color: #3b9c56;
         color: var(--subTextColor);
         /* box-shadow: inset 0 0 0 5px var(--mainColor); */
     }
@@ -71,9 +71,9 @@ const AddNpkBtn = styled(BaseBtn)`
     box-shadow: inset 0 0 0 5px var(--mainColor);
     background-color: #F1F3F6;
     &:hover{
-        background-color: #F44336;
-        color: var(--subTextColor);
-        box-shadow: inset 0 0 0 px var(--mainColor);
+        background-color: #ffffff;
+        color: #3b9c56;
+        box-shadow: inset 0 0 0 5px #3b9c56;
     }
 `;
 const Span = styled.span`
@@ -171,29 +171,36 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
     const updateNPK = async() =>{
         try{
             const plotData = await GetPlotDocByID(user.email, selectPlot);
-            // const plotData = await GetPlotDocByIdData();
+            const sensorIds = plotData.sensor;
+
+            const getSensorNames = async (sensorId) => {
+                const sensorData = await getSensorOfUser(user.email);
+                const sensor = sensorData.find((sensor) => sensor.documentId === sensorId);
+                return sensor ? sensor.name : null;
+              };
+            const sensorNames = await getSensorNames(sensorIds);
+
             const npkStatus = await calcNpkResultStatusMainPage(user.email,selectPlot,RgbToNPK.NITROGEN,RgbToNPK.PHOSPHORUS,RgbToNPK.POTASSIUM);
-            await GetNpkFromRealtimeDB(plotData.sensor)
-            .then(([red, green, blue]) => {
-                const readingRed = red !== null ?  red : 0;
-                const readingGreen = green !== null ?  green : 0;
-                const readingBlue = blue !== null ?  blue : 0;
+            const npkData = await GetNpkFromRealtimeDB(sensorNames, user.uid);
+            const readingRed = npkData.nitrogen !== null ? npkData.nitrogen : 0;
+            const readingGreen = npkData.phosphorus !== null ? npkData.phosphorus : 0;
+            const readingBlue = npkData.potassium !== null ? npkData.potassium : 0;
             setRgbToNPK({
-                NITROGEN: readingRed,
-                PHOSPHORUS: readingGreen,
-                POTASSIUM: readingBlue,
-                date: new Date(),
+            NITROGEN: readingRed,
+            PHOSPHORUS: readingGreen,
+            POTASSIUM: readingBlue,
+            date: new Date(),
             });
             setnpkStatus({
-                NITROGEN: npkStatus.IsNitrogenStatusInRange,
-                PHOSPHORUS: npkStatus.IsPhosphorusStatusInRange,
-                POTASSIUM: npkStatus.IsPotassiumStatusStatusInRange,
-            });
+            NITROGEN: npkStatus.IsNitrogenStatusInRange,
+            PHOSPHORUS: npkStatus.IsPhosphorusStatusInRange,
+            POTASSIUM: npkStatus.IsPotassiumStatusStatusInRange,
             });
         } catch(error) {
             console.error('Error fetching sensor readings:', error);
         }
     }
+
     const npkValue =[ 
         {valueType: "Nitrogen", subValueType: "N", value: RgbToNPK.NITROGEN ,status : npkStatus.NITROGEN?GoodImg:BadImg},
         {valueType: "Phosphorus", subValueType: "P", value: RgbToNPK.PHOSPHORUS ,status : npkStatus.PHOSPHORUS?GoodImg:BadImg},

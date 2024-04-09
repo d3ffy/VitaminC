@@ -48,6 +48,12 @@ const DropDownBtn = styled(BaseBtn)`
     font-weight: 400;
     color: black;
 `
+const Emailtag = styled.div`
+    width: 70%;
+    display: flex;
+    justify-content: center;
+    word-break: break-all;
+`
 const DropDownImg = styled.img`
     margin-right: 20px;
     height: 30px;
@@ -83,6 +89,7 @@ const DropdownMenu = styled.div`
 const DropdownContainer = styled.div`
     height: 100%;
     position: relative;
+    font-size: 16px;
 
     &:hover  {
         ${DropdownMenu} {
@@ -117,8 +124,8 @@ const HeaderMenu = ({isLogin}) => {
                         <DropdownContainer>
                             <StyledLink to="/"><LinkBtn>PROFILE</LinkBtn></StyledLink>
                             <DropdownMenu>
-                                <StyledLink to="/"><DropDownBtn><DropDownImg src={userDropDown}></DropDownImg>{user.email}</DropDownBtn></StyledLink>
-                                <StyledLink to="/"><DropDownBtn><DropDownImg src={settingDropDown}></DropDownImg>Setting</DropDownBtn></StyledLink>
+                                <StyledLink to="/"><DropDownBtn><DropDownImg src={userDropDown}></DropDownImg><Emailtag>{user.email}</Emailtag></DropDownBtn></StyledLink>
+                                {/* <StyledLink to="/"><DropDownBtn><DropDownImg src={settingDropDown}></DropDownImg>Setting</DropDownBtn></StyledLink> */}
                                 <StyledLink to="/"><DropDownBtn onClick={handleLogout}><DropDownImg src={logoutDropDown}></DropDownImg>Log Out</DropDownBtn></StyledLink>
                             </DropdownMenu>
                         </DropdownContainer>

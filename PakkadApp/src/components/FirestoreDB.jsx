@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import firebaseApp from '../firebase.js';
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc ,getDoc} from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc ,getDoc  ,getCollections, setDoc} from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { useAuth  } from "./AuthContext.jsx";
 
@@ -204,18 +204,31 @@ export const getPlantData = async () => {
     return [];
   }
 };
-
-export const AddNpkToPlotHistory = async (userEmail, viewingPlot, npkData) =>{
+export const getSensorOfUser = async (userEmail) => {
   var userDocumentId = await GetUserDocumentId(userEmail);
 
   if (userDocumentId) {
     try {
       const firestoreDB = getFirestore(firebaseApp);
-      const historyCollectionRef = collection(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot, "history_DB");
-      
-      const newHistoryDoc = await addDoc(historyCollectionRef,npkData);
+      const userDocRef = doc(firestoreDB, "user_DB", userDocumentId);
+      const plotCollection = collection(userDocRef, "sensor_DB");
+      const querySnapshot = await getDocs(plotCollection);
 
-      return newHistoryDoc;
+      const sensorData = [];
+
+      // Loop through each document in the sensor_DB collection
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const name = data.name; // Get the 'name' field value
+        const documentId = doc.id; // Get the document ID
+
+        // Add the name and document ID to the sensorData array
+        sensorData.push({ name, documentId });
+      });
+
+      // console.log(plotData);
+      // console.log(userDocumentId);
+      return sensorData;
     } catch (error) {
       console.error("Error fetching plot data:", error);
       return [];
@@ -227,38 +240,68 @@ export const AddNpkToPlotHistory = async (userEmail, viewingPlot, npkData) =>{
   }
 };
 
-export const addUserToFirestore = async (email) => {
+
+export const AddNpkToPlotHistory = async (userEmail, viewingPlot, npkData) => {
+  var userDocumentId = await GetUserDocumentId(userEmail);
+  
+  if (userDocumentId) {
+    try {
+      const firestoreDB = getFirestore(firebaseApp);
+      
+      // อ้างอิงไปยัง document ของแปลงที่กำลังดูอยู่
+      const plotDocRef = doc(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot);
+      
+      // สร้าง subcollection "history_DB" ภายใต้ document ของแปลง
+      const historyCollectionRef = collection(plotDocRef, "history_DB");
+      
+      // เพิ่มเอกสารใหม่ที่มีข้อมูล NPK ลงใน subcollection "history_DB"
+      const newHistoryDoc = await addDoc(historyCollectionRef, npkData);
+      
+      return newHistoryDoc;
+    } catch (error) {
+      console.error("Error adding NPK data to plot history:", error);
+      throw error;
+    }
+  } else {
+    console.log("User document ID is not available yet.");
+    throw new Error("User document ID is not available.");
+  }
+};
+export const addUserToFirestore = async (email,uid) => {
   const firestoreDB = getFirestore(firebaseApp);
   const userCollection = collection(firestoreDB, "user_DB");
+
+  const docRef = doc(userCollection, uid);
 
   // ตั้งค่าข้อมูล email 
   const data = {
     email: email,
   };
+
   // สร้าง document
-  const docRef =await addDoc(userCollection, data);
+  await setDoc(docRef, data);
+  // const docRef = doc(userCollection, email);
 
   // สร้าง subcollection ใหม่
-  const subcollectionRef = collection(docRef, "plot_DB");
-  const plotData = {
-    garden_name: "carrot",
-    image: "./path/image",
-    sensor: "sonsor1",
-    veg_name: "ผักคอส",
-  };
-  const plotDocRef = await addDoc(subcollectionRef, plotData);
-  const historySubcollectionRef = collection(plotDocRef, "history_DB");
+  // const subcollectionRef = collection(docRef, "plot_DB");
+  // const plotData = {
+  //   garden_name: "carrot",
+  //   image: "./path/image",
+  //   sensor: "sonsor1",
+  //   veg_name: "ผักคอส",
+  // };
+  // const plotDocRef = await addDoc(subcollectionRef, plotData);
+  // const historySubcollectionRef = collection(plotDocRef, "history_DB");
 
-  // เพิ่ม document ใน subcollection history_DB
-  const historyData = {
-    NITROGEN: 1,
-    PHOSPHORUS: 2,
-    POTASSIUM: 3,
-    date: new Date(),
-  };
-  await addDoc(historySubcollectionRef, historyData);
+  // // เพิ่ม document ใน subcollection history_DB
+  // const historyData = {
+  //   NITROGEN: 1,
+  //   PHOSPHORUS: 2,
+  //   POTASSIUM: 3,
+  //   date: new Date(),
+  // };
+  // await addDoc(historySubcollectionRef, historyData);
 };
-
 export const addUserPlot = async(userEmail, gardenName, file, sensorName, vegName) =>{
   var userDocumentId = await GetUserDocumentId(userEmail);
 
@@ -277,13 +320,13 @@ export const addUserPlot = async(userEmail, gardenName, file, sensorName, vegNam
 
       EditPlot(userEmail,newPlotDoc.id,"image",file ? await saveImageToStorage(file, newPlotDoc.id) : "./path/image");
 
-      const historyCollection = await collection(newPlotDoc, "history_DB");
-      const historydoc = await addDoc(historyCollection, {
-        NITROGEN: 0,
-        PHOSPHORUS: 0,
-        POTASSIUM: 0,
-        date: new Date(),
-      });
+      // const historyCollection = await collection(newPlotDoc, "history_DB");
+      // const historydoc = await addDoc(historyCollection, {
+      //   NITROGEN: 0,
+      //   PHOSPHORUS: 0,
+      //   POTASSIUM: 0,
+      //   date: new Date(),
+      // });
 
       return newPlotDoc.id;
     } catch (error) {
@@ -389,6 +432,7 @@ export const saveImageToStorage = async (file,plotId) => {
     return downloadURL;
   }
 };
+
 export const calcNpkResultStatusMainPage = async (userEmail,viewingPlot,nitrogen,phosphorus,potassium) => {
   const plotInfos = await GetPlotInfo(userEmail);
   const historyData = await GetHistoryInfo(userEmail,viewingPlot);
@@ -421,7 +465,6 @@ export const calcNpkResultStatusMainPage = async (userEmail,viewingPlot,nitrogen
 
   return {IsNitrogenStatusInRange , IsPhosphorusStatusInRange ,IsPotassiumStatusStatusInRange};
 }
-
 export const calcNpkResult = async (userEmail,viewingPlot) => {
   const plotInfos = await GetPlotInfo(userEmail);
   const historyData = await GetHistoryInfo(userEmail,viewingPlot);
@@ -448,7 +491,6 @@ export const calcNpkResult = async (userEmail,viewingPlot) => {
 
   return calcNpkCollection;
 };
-
 const calculateNpkStatus = (plantInfo, nitrogen, phosphorus, potassium) => {
   const nitrogenStatus = calculateNutrientStatus(
     plantInfo.nitrogen_start,
@@ -474,7 +516,6 @@ const calculateNpkStatus = (plantInfo, nitrogen, phosphorus, potassium) => {
 
   return { summary, isInRange };
 };
-
 const calculateNutrientStatus = (start, end, value, nutrient) => {
   const isInRange = value >= start && value <= end;
   const diff = isInRange ? 0 : Math.abs(value - start);

@@ -137,8 +137,10 @@ const Register = () => {
                 alert("This email is already in use. Please use another email.");
             } else {
                 try {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                    await addUserToFirestore(email);
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    const uid = user.uid;
+                    await addUserToFirestore(email, uid);
                     setEmail('');
                     setPassword('');
                     setConfirmPassword('');
