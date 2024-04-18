@@ -46,7 +46,7 @@ export const GetSensorNames = async () => {
       const sensorName = doc.data().sensor_name;
       sensorNames.push(sensorName);
     });
-
+    
     return sensorNames;
   }
     catch(error){

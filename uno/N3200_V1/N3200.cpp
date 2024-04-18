@@ -103,6 +103,7 @@ uint16_t read(uint8_t color , uint8_t min_range , uint8_t max_range){
 
 uint8_t N3200::read(uint8_t color) {
     this->filter(color);
+    delay(300);
     uint8_t max = 255;
     uint8_t min = 0;
     uint8_t value = 0;
@@ -150,14 +151,17 @@ uint8_t N3200::read(uint8_t color) {
 
 void N3200::calibrate_dark() {
     uint8_t r = 0, g = 0, b = 0, c = 0;
+    this->is_calibrated = false;
 
     delay(this->_integration_time / 2);
     for(int i = 0; i < 10; i++) {
         r += this->read(RED);
+        delay(200);
         g += this->read(GREEN);
+        delay(200);
         b += this->read(BLUE);
+        delay(200);
         c += this->read(CLEAR);
-        Serial.println("CAL DARK loop : " + String(i));
         delay(this->_integration_time / 10);
     }
 
@@ -165,18 +169,22 @@ void N3200::calibrate_dark() {
     this->max_g = g / 10;
     this->max_b = b / 10;
     this->max_c = c / 10;
+    Serial.println("MAX " + String(max_r) + " " + String(max_g) + " " + String(max_b) + " " + String(max_c));
 }
 
 void N3200::calibrate_light() {
+    this->is_calibrated = false;
     uint8_t r = 0, g = 0, b = 0, c = 0; //** SET all value to zero
 
     delay(this->_integration_time / 2); //** More integration time more accuracy
     for(int i = 0; i < 10; i++) {
         r += this->read(RED);
+        delay(200);
         g += this->read(GREEN);
+        delay(200);
         b += this->read(BLUE);
+        delay(200);
         c += this->read(CLEAR);
-        Serial.println("CAL Light loop : " + String(i));
         delay(this->_integration_time / 10);
     }
 
@@ -184,6 +192,7 @@ void N3200::calibrate_light() {
     this->white_balance_rgb.green = this->min_g = g / 10;
     this->white_balance_rgb.blue = this->min_b = b / 10;
     this->white_balance_rgb.clear = this->min_c = c / 10;
+    Serial.println("MIN " + String(min_r) + " " + String(min_g) + " " + String(min_b) + " " + String(min_c));
 }
 
 

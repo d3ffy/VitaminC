@@ -18,7 +18,7 @@ export const GetNpkFromRealtimeDB = (sensor, userId) => {
     let processTimeoutId;
     let noneTimeoutId;
 
-    set(realtimeDBRefCOMMAND, "RUN")
+    set(realtimeDBRefCOMMAND, "READ")
       .then(() => {
         processTimeoutId = setTimeout(() => {
           checkCommandProcess();
@@ -104,7 +104,7 @@ export const GetNpkFromRealtimeDBOld = (sensor, userId) => {
   const realtimeDBRefBlue = ref(realtimeDB, dataBluePath);
   const realtimeDBRefCOMMAND = ref(realtimeDB, dataCOMMANDPath);
 
-  set(realtimeDBRefCOMMAND, "RUN");
+  set(realtimeDBRefCOMMAND, "READ");
 
   return Promise.all([
     new Promise((resolve) => {

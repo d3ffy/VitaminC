@@ -39,21 +39,23 @@ void loop() {
 }
 
 void calibrateSensor() {
-
   // Color Sensor Calibration
   Serial.println(F("Calibrating the sensor. . ."));
+  delay(1000);
 
   // Calibrate lowest light
   Serial.println(F("Face Dark surface // turn off all light"));
-  delay(1000);
+  delay(2000);
   ColorSensor.calibrate_dark();
   delay(1000);
 
   // Calibrate highest light
+  digitalWrite(whiteLED, HIGH);
   Serial.println(F("Face white surface // turn on all light"));
-  delay(1000);
+  delay(2000);
   ColorSensor.calibrate_light();
   delay(1000);
+  digitalWrite(whiteLED, LOW);
 
   // Calibrate the sensor from light/dark value
   ColorSensor.calibrate();
@@ -79,7 +81,7 @@ void functionHandler(const String& receivedMessage) {
 }
 
 void getColorValue() {
-  int redValue = 0, greenValue = 0, blueValue = 0;
+  uint8_t redValue = 0, greenValue = 0, blueValue = 0;
   // Turn red LED & read RED value
   digitalWrite(redLED, HIGH);
   delay(500);
@@ -100,15 +102,47 @@ void getColorValue() {
   blueValue = ColorSensor.read(BLUE); 
   delay(500);
   digitalWrite(blueLED, LOW);
-  
-  String output = "VALUE N=" + String(redValue) 
-                  + " P=" + String(greenValue) 
-                  + " K=" + String(blueValue);
+
+  Serial.println(String(redValue) + " " + String(greenValue) + " " + String(blueValue)); // debug raw rgb
+  float nitrogenValue = calBeerLambertLaw(blueValue, "BLUE");
+  float phosphorusValue = calBeerLambertLaw(greenValue, "GREEN");
+  float potassiumValue = calBeerLambertLaw(redValue, "RED");
                   
-  if (Serial.availableForWrite() > output.length() + 2) { // To ensure the buffer is not full & +2 is newline
-    Serial.println(output);
-  } else if (Serial.availableForWrite() <= output.length() + 2) {
+  if (Serial.availableForWrite() > 0) { 
+    Serial.print(F("VALUE N="));
+    Serial.print(nitrogenValue, 4); 
+    Serial.print(F(" P="));
+    Serial.print(phosphorusValue, 4); 
+    Serial.print(F(" K="));
+    Serial.println(potassiumValue, 4);
+
+  } else if (Serial.availableForWrite() <= 0) {
     Serial.println(F("ERROR: Serial buffer is full. Please wait & try again"));
     Serial.read();
   }
+}
+
+float calBeerLambertLaw(uint8_t value, String color) {
+  if (value <= 0 || value > 255) {
+    Serial.println("ERROR: value must be between 0-255");
+    return 0.0;
+  }
+  float length = 1.0; // Assume the path length is 1 cm
+  float absorbance = log10(255.0 / value);  // Ensure floating point division
+
+  // Calculate the concentration based on the color
+  float coefficient;
+  if (color == "RED") {
+    coefficient = 0.0085; // Update with correct coefficient for RED
+  } else if (color == "GREEN") {
+    coefficient = 0.0140; // Update with correct coefficient for GREEN
+  } else if (color == "BLUE") {
+    coefficient = 0.005; // Update with correct coefficient for BLUE
+  } else {
+    Serial.println(F("ERROR: color not found"));
+    return 0.0;
+  }
+
+  float concentration = absorbance / (length * coefficient);
+  return concentration;
 }

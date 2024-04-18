@@ -14,11 +14,11 @@ const char* WIFI_PASS = "FreeWifi";
 const char* API_KEY = "AIzaSyCPkTRiFpWFcjuJvAiOZCqoMXJN2Gvtzjc";
 const char* DATABASE_URL = "https://vitaminc-4695a-default-rtdb.asia-southeast1.firebasedatabase.app/";
 const char* PROJECT_ID = "vitaminc-4695a";
-const char* USER_EMAIL = "test12@gmail.com";
+const char* USER_EMAIL = "deffy@gmail.com";
 const char* USER_PASSWORD = "123456";
 
 // Define sensor's name for Firebase
-const char* SENSOR_NAME = "sensor_lnwza";
+const char* SENSOR_NAME = "sensor_baboo";
 
 // Firebase objects as global to initialize once
 FirebaseData fbdo;
@@ -64,8 +64,8 @@ void functionHandler(const String& receivedMessage) {
   // Handling received message from Arduino
   if (receivedMessage.startsWith("VALUE")) {
     // Mapping the received message to the variables
-    int nitrogen, phosphorus, potassium;
-    sscanf(receivedMessage.c_str(), "VALUE N=%d P=%d K=%d", &nitrogen, &phosphorus, &potassium);
+    float nitrogen, phosphorus, potassium;
+    sscanf(receivedMessage.c_str(), "VALUE N=%f P=%f K=%f", &nitrogen, &phosphorus, &potassium);
 
     // Sent value to Firebase
     sentValueToFirebase(nitrogen, phosphorus, potassium);
@@ -102,6 +102,10 @@ void functionHandler(const String& receivedMessage) {
       }
       lastFetch = millis();
 
+  } else if (receivedMessage.startsWith("ERROR")) {
+    Serial.println(F("Error: please calibrate sensor and try again"));
+    Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "ERROR");
+    Serial.println(F("Changing command to ERROR"));
   }
 }
 
@@ -130,11 +134,11 @@ void connectFirebase() {
   }
 }
 
-void sentValueToFirebase(const int& nitrogen, const int& phosphorus, const int& potassium) {
+void sentValueToFirebase(const float& nitrogen, const float& phosphorus, const float& potassium) {
   // Sent value to RTDB
-  if (Firebase.RTDB.setInt(&fbdo, path_RTDB + "/nitrogen", nitrogen) &&
-      Firebase.RTDB.setInt(&fbdo, path_RTDB + "/phosphorus", phosphorus) &&
-      Firebase.RTDB.setInt(&fbdo, path_RTDB + "/potassium", potassium)){
+  if (Firebase.RTDB.setFloat(&fbdo, path_RTDB + "/nitrogen", nitrogen) &&
+      Firebase.RTDB.setFloat(&fbdo, path_RTDB + "/phosphorus", phosphorus) &&
+      Firebase.RTDB.setFloat(&fbdo, path_RTDB + "/potassium", potassium)){
     Serial.println(F("Sent value to RTDB successfully."));
   } else {
     Serial.println(fbdo.errorReason());}
@@ -157,14 +161,25 @@ void initFirestore() {
 
   if (!checkSensorName()) {
     // If sensor name isn't initialized
-    String path = "user_DB/" + String(auth.token.uid.c_str()) + "/sensor_DB";
+    String path = "user_DB/" + String(auth.token.uid.c_str());
     FirebaseJson json;
-    json.set("fields/name/stringValue", SENSOR_NAME);
+    
+    // Create email field
+    json.set("fields/email/stringValue", USER_EMAIL);
     if (Firebase.Firestore.createDocument(&fbdo, PROJECT_ID, "", path, json.raw())) {
-      Serial.println("Create Successfully");
+      json.clear();
+      // Create sensor field
+      path += "/sensor_DB";
+      json.set("fields/name/stringValue", SENSOR_NAME);
+      if (Firebase.Firestore.createDocument(&fbdo, PROJECT_ID, "", path, json.raw())) {
+        Serial.println("Create Successfully");
+      } else {
+        Serial.println(fbdo.errorReason());
+      }
     } else {
       Serial.println(fbdo.errorReason());
     }
+
   } else {
     Serial.println(F("Sensor name already initialzed!"));
   }
