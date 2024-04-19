@@ -1,69 +1,33 @@
 // Arduino
-#include <N3200.h>
+#include <Wire.h>
+#include "Adafruit_TCS34725.h"
 
 #define blueLED 11
 #define greenLED 12
 #define redLED 13
 #define whiteLED 2
 
-#define S0 3
-#define S1 4
-#define S2 6
-#define S3 7
-#define out 5
-
-N3200 ColorSensor(S0, S1, S2, S3, out);
+Adafruit_TCS34725 ColorSensor = Adafruit_TCS34725();
 void setup() {
   // Pin define
   pinMode(redLED, OUTPUT);
   pinMode(greenLED, OUTPUT);
   pinMode(blueLED, OUTPUT);
   pinMode(whiteLED, OUTPUT);
-  pinMode(S0, OUTPUT);
-  pinMode(S1, OUTPUT);
-  pinMode(S2, OUTPUT);
-  pinMode(S3, OUTPUT);
-  pinMode(out, INPUT);
   Serial.begin(115200);
 
-  // Color Sensor Setup
-  ColorSensor.begin();
-  ColorSensor.frequency_scaling(LO);
-  calibrateSensor();
+  if (ColorSensor.begin()) {
+    Serial.println("READY");
+    } else {
+    Serial.println("FAILED");
+    while (1);
+  }
 }
 
 void loop() {
   String receivedMessage;
   messageHandler(receivedMessage);
   functionHandler(receivedMessage);
-}
-
-void calibrateSensor() {
-  // Color Sensor Calibration
-  Serial.println(F("Calibrating the sensor. . ."));
-  delay(1000);
-
-  // Calibrate lowest light
-  Serial.println(F("Face Dark surface // turn off all light"));
-  delay(2000);
-  ColorSensor.calibrate_dark();
-  delay(1000);
-
-  // Calibrate highest light
-  digitalWrite(whiteLED, HIGH);
-  Serial.println(F("Face white surface // turn on all light"));
-  delay(2000);
-  ColorSensor.calibrate_light();
-  delay(1000);
-  digitalWrite(whiteLED, LOW);
-
-  // Calibrate the sensor from light/dark value
-  ColorSensor.calibrate();
-  delay(500);
-  digitalWrite(greenLED, HIGH);
-  Serial.println(F("Calibration done"));
-  delay(500);
-  digitalWrite(greenLED, LOW);
 }
 
 void messageHandler(String& receivedMessage) {
@@ -75,40 +39,58 @@ void messageHandler(String& receivedMessage) {
 void functionHandler(const String& receivedMessage) {
   if (receivedMessage.startsWith("READ")) {
     getColorValue();
-  } else if (receivedMessage.startsWith("CALIBRATE")) {
-    calibrateSensor();
   }
 }
 
 void getColorValue() {
-  uint8_t redValue = 0, greenValue = 0, blueValue = 0;
+  uint8_t rawRedValue, rawGreenValue, rawBlueValue, rawClearValue;
+  float redValue, greenValue, blueValue, clearValue;
+
   // Turn red LED & read RED value
   digitalWrite(redLED, HIGH);
   delay(500);
-  redValue = ColorSensor.read(RED);
+  rawRedValue = ColorSensor.read16(TCS34725_RDATAL);
   delay(500);
   digitalWrite(redLED, LOW);
   delay(500);
+
   // Turn green LED & read GREEN value
   digitalWrite(greenLED, HIGH);
   delay(500);
-  greenValue = ColorSensor.read(GREEN);
+  rawGreenValue = ColorSensor.read16(TCS34725_GDATAL);
   delay(500);
   digitalWrite(greenLED, LOW);
   delay(500);
+
   // Turn blue LED & read BLUE value
   digitalWrite(blueLED, HIGH);
   delay(500);
-  blueValue = ColorSensor.read(BLUE); 
+  rawBlueValue = ColorSensor.read16(TCS34725_BDATAL);
   delay(500);
   digitalWrite(blueLED, LOW);
+  delay(500);
+  
+  // Get Clear Value 
+  rawClearValue = ColorSensor.read16(TCS34725_CDATAL);
+  delay(500);
 
-  Serial.println(String(redValue) + " " + String(greenValue) + " " + String(blueValue)); // debug raw rgb
+  Serial.println(String(rawRedValue) + " " + String(rawGreenValue) + " " + String(rawBlueValue) + " " + String(rawClearValue)); // debuging raw values
+  // Convert Raw to RGB
+  if (rawClearValue <= 0) {  // Check for division by zero
+    redValue = greenValue = blueValue = 0; // Set all to zero if clear value is zero
+  } else {
+    // Convert and normalize RGB values
+    redValue = float(rawRedValue) / rawClearValue * 255;
+    greenValue = float(rawGreenValue) / rawClearValue * 255;
+    blueValue = float(rawBlueValue) / rawClearValue * 255;
+  }
+
+  Serial.println(String(redValue) + " " + String(greenValue) + " " + String(blueValue)); // debuging rgb
   float nitrogenValue = calBeerLambertLaw(blueValue, "BLUE");
   float phosphorusValue = calBeerLambertLaw(greenValue, "GREEN");
   float potassiumValue = calBeerLambertLaw(redValue, "RED");
                   
-  if (Serial.availableForWrite() > 0) { 
+  if (Serial.availableForWrite() > 50) { // Avoiding buffer overflow, maximum string = 50 characters
     Serial.print(F("VALUE N="));
     Serial.print(nitrogenValue, 4); 
     Serial.print(F(" P="));
@@ -116,33 +98,33 @@ void getColorValue() {
     Serial.print(F(" K="));
     Serial.println(potassiumValue, 4);
 
-  } else if (Serial.availableForWrite() <= 0) {
+  } else {
     Serial.println(F("ERROR: Serial buffer is full. Please wait & try again"));
-    Serial.read();
+    clearSerialBuffer();
   }
 }
 
-float calBeerLambertLaw(uint8_t value, String color) {
-  if (value <= 0 || value > 255) {
-    Serial.println("ERROR: value must be between 0-255");
+float getAbsorbanceCoefficient(const String& color) {
+  if (color == "RED") return 0.0085;
+  else if (color == "GREEN") return 0.0140;
+  else if (color == "BLUE") return 0.005;
+  else {
     return 0.0;
   }
-  float length = 1.0; // Assume the path length is 1 cm
+}
+
+float calBeerLambertLaw(float value, const String& color) {
+  if (value <= 0) {
+    return 0.0;
+  }
+  float length = 1.0; // Path length in cm
+  float coefficient = getAbsorbanceCoefficient(color);
   float absorbance = log10(255.0 / value);  // Ensure floating point division
+  return absorbance / (length * coefficient);
+}
 
-  // Calculate the concentration based on the color
-  float coefficient;
-  if (color == "RED") {
-    coefficient = 0.0085; // Update with correct coefficient for RED
-  } else if (color == "GREEN") {
-    coefficient = 0.0140; // Update with correct coefficient for GREEN
-  } else if (color == "BLUE") {
-    coefficient = 0.005; // Update with correct coefficient for BLUE
-  } else {
-    Serial.println(F("ERROR: color not found"));
-    return 0.0;
+void clearSerialBuffer() {
+  while (Serial.available() > 0) {
+    Serial.read();
   }
-
-  float concentration = absorbance / (length * coefficient);
-  return concentration;
 }
