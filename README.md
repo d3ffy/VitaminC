@@ -19,9 +19,9 @@ Make sure you have the following installed on your system:
 
 ### Installation
 
-1. Clone the repository: git clone https://github.com/d3ffy/VitaminC.git
-2. Navigate to the project directory: cd PakkadApp
-3. Install dependencies: npm install
+1. Clone the repository: `git clone https://github.com/d3ffy/VitaminC.git`
+2. Navigate to the project directory: `cd PakkadApp`
+3. Install dependencies: `npm install`
 
 ### Running the Application
 
