@@ -89,3 +89,5 @@ node_modules/
 # dotenv environment variables file
 .env
 
+#Firebase API Key
+src/firebase.js
