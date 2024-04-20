@@ -386,10 +386,10 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
         }, timeDiff); 
     }
     // Call recordDataAuto initially
-    recordDataAuto(); 
+    // recordDataAuto(); 
 
     // Refresh schedules every day
-    setInterval(recordDataAuto, 24 * 60 * 60 * 1000);
+    // setInterval(recordDataAuto, 24 * 60 * 60 * 1000);
     return(
         <Container>
             <InputContainer>
