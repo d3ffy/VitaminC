@@ -589,6 +589,8 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
     }, [viewingPlotSensor, sensorList]);
 
     const handleSensorChange = (event) => {
+        if(event.target.value === "none")
+            return
         setSensorName(event.target.value);
         handleSensorIdChange(event.target.value);
     };
@@ -712,6 +714,7 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
                             <InfoCard>
                                 <Plottype>อุปกรณ์</Plottype>
                                 <PlotSelect value={sensorName} onChange={handleSensorChange}>
+                                    <option key="NONE" value="none">none</option>
                                     {sensorList.map((sensor, index) => (
                                     <option key={index} value={sensor.name}>
                                         {sensor.name}

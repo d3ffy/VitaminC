@@ -2,7 +2,7 @@ import React , { useState , useEffect } from "react";
 import styled from 'styled-components';
 import GoodImg from '../image/goodValue.png';
 import BadImg from '../image/badValue.png';
-import { GetPlotInfo, AddNpkToPlotHistory, GetPlotData,GetPlotDocByID, GetSensorNames ,calcNpkResultStatusMainPage, getSensorOfUser } from "./FirestoreDB.jsx";
+import { GetPlotInfo, AddNpkToPlotHistory, GetPlotData,GetPlotDocByID, GetSensorNames ,calcNpkResultStatusMainPage, getSensorOfUser, UpdateAutoCheckTime } from "./FirestoreDB.jsx";
 import  {GetNpkFromRealtimeDB} from "./RealtimeDB.jsx";
 
 import { useAuth } from "./AuthContext.jsx";
@@ -123,37 +123,142 @@ const Value = styled.span`
 const ValueImg = styled.img`
     margin-bottom: 5px;
 `
+const AutoCheckContainer = styled.div`
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    width: 100%;
+    height: fit-content;
+`
+const ToggleContainer = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+`
+const Toggle = styled.label`
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
 
+  & input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+`;
+const Slider = styled.span`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 34px;
+  cursor: pointer;
+
+  &::before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.4s;
+  }
+`;
+const Input = styled.input`
+  &:checked + ${Slider} {
+    background-color: var(--mainColor);
+
+    &::before {
+      transform: translateX(26px);
+    }
+  }
+`;
+const TimeInput = styled.input.attrs({ type: 'time' })`
+    width: 120px; /* Adjust width as needed */
+    height: 100%; /* Adjust height as needed */
+    margin-left: 15px; /* Add some spacing */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px; 
+    text-align: center;
+`;
 
 const  CheckNpkContainer = ({viewingPlotName}) => {
     const { user } = useAuth();
 
+    const [statusUI, setStatusUI] = useState("On");
+    const [status, setStatus] = useState(true);
     const [plotList , setPlotList] = useState([]);
+    const [checkInTime, setCheckInTime] = useState('00:01');
+    const [selectPlot, setSelectedPlot] = useState('');
+
+    const statusFormat = (status) => {
+        if(status === true){
+            setStatusUI('Off');
+        }
+        else{
+            setStatusUI('On');
+        }
+    };
+    const handleToggleChange = async() =>{
+        try{
+            setStatus(!status);
+            statusFormat(status);
+            await UpdateAutoCheckTime(user.email, selectPlot, checkInTime, status);
+        } catch(error) {
+            console.error('Error fetching sensor readings:', error);
+        }
+    }
+    const handleTimeChange = async(event) =>{
+        try{
+            setCheckInTime(event.target.value)
+            await UpdateAutoCheckTime(user.email, selectPlot, checkInTime, status);
+
+        } catch(error) {
+            console.error('Error fetching sensor readings:', error);
+        }
+    }
+    
+    
     const refreshPlotList = async () => {
         if (user) {
-          const plots = await GetPlotInfo(user.email);
-          const plotnames = plots.map((plot) => ({
-            id: plot.id,
-            name: plot.garden_name,
-            sensor: plot.sensor,
-            veg_name: plot.veg_name,
-          }));
-          plotnames.unshift({
-            id: "donthavevalue",
-            name: "",
-            sensor: "",
-            veg_name: "",
-          });
-          setPlotList(plotnames);
+            const plots = await GetPlotInfo(user.email);
+            const plotnames = plots.map((plot) => ({
+                id: plot.id,
+                name: plot.garden_name,
+                sensor: plot.sensor,
+                veg_name: plot.veg_name,
+                time: plot.autoCheckInTime,
+                status: plot.autoCheckStatus,
+            }));
+            setPlotList(plotnames);
         }
       };
       useEffect(() => {
         refreshPlotList();
     }, [user]);
 
-    const [selectPlot, setSelectedPlot] = useState('');
-    const handlePlotChange = (event) => {
-        setSelectedPlot(event.target.value);
+    const handlePlotChange = async (event) => {
+        if(event.target.value === "none"){
+            return
+        }
+        const newPlotId = event.target.value;
+        setSelectedPlot(newPlotId);
+        const plotData = await GetPlotDocByID(user.email, newPlotId);
+
+        if (plotData) {
+            setCheckInTime(plotData?.autoCheckInTime || '00:00'); 
+            setStatus(plotData.autoCheckStatus);
+            statusFormat(status);
+            console.log(plotData.autoCheckStatus); 
+        } else {
+            console.log("Plot not found for ID:", newPlotId); 
+        }
     };
     
     // จัดการค่า NPK ดึงค่า แสดงค่า
@@ -215,21 +320,84 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
             AddNpkToPlotHistory(user.email, selectPlot, RgbToNPK);
             alert("Added to History.");
             console.log("recorded");
-          } else if(selectPlot == "donthavevalue"){
+        }else {
             alert("กรุณาเลือกแปลงผักก่อนบันทึกข้อมูล");
-          }
-          else {
-            alert("กรุณาเลือกแปลงผักก่อนบันทึกข้อมูล");
-          }
+        }
     };
     const loginAlert  = () => {
         alert('You must login before record data!!!')
     };
+
+    const recordDataAuto  = async () => {
+        if (user) {
+            const plots = await GetPlotInfo(user.email);
+
+            for (const plot of plots) {
+                const plotId = plot.id;
+                const plotStatus = plot.autoCheckStatus;
+                const plotTime = plot.autoCheckInTime;
+
+                if (plotId && plotStatus === true) {
+                    // ดึงค่า NPK
+                    const plotData = await GetPlotDocByID(user.email, plotId);
+                    const sensorIds = plotData.sensor;
+    
+                    const getSensorNames = async (sensorId) => {
+                        const sensorData = await getSensorOfUser(user.email);
+                        const sensor = sensorData.find((sensor) => sensor.documentId === sensorId);
+                        return sensor ? sensor.name : null;
+                    };
+    
+                    const sensorNames = await getSensorNames(sensorIds);
+                    const npkData = await GetNpkFromRealtimeDB(sensorNames, user.uid);
+                    const readingRed = npkData.nitrogen !== null ? npkData.nitrogen : 0;
+                    const readingGreen = npkData.phosphorus !== null ? npkData.phosphorus : 0;
+                    const readingBlue = npkData.potassium !== null ? npkData.potassium : 0;
+                    const npkSet = {
+                        NITROGEN: readingRed,
+                        PHOSPHORUS: readingGreen,
+                        POTASSIUM: readingBlue,
+                        date: new Date()
+                    };
+
+                    scheduleNpkRecording(user.email, plotId, plotTime, npkSet);
+                }
+            }
+        }
+    }
+    function scheduleNpkRecording(userEmail, plotId, targetTime, npkSet) {
+        const now = new Date();
+        const [targetHour, targetMinute] = targetTime.split(':'); // Assuming targetTime is like "18:00"
+    
+        // Calculate target Date object
+        const targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHour, targetMinute, 0, 0);
+    
+        // Calculate time difference in milliseconds
+        let timeDiff = targetDate.getTime() - now.getTime();
+    
+        // Handle if target time has already passed today
+        if (timeDiff < 0) {
+            timeDiff += 24 * 60 * 60 * 1000; // Add 24 hours
+        } 
+    
+        // Schedule the function call
+        setTimeout(() => {
+            AddNpkToPlotHistory(userEmail, plotId, npkSet);
+        }, timeDiff); 
+    }
+    // Call recordDataAuto initially
+    recordDataAuto(); 
+
+    // Refresh schedules every day
+    setInterval(recordDataAuto, 24 * 60 * 60 * 1000);
     return(
         <Container>
             <InputContainer>
                 <PlotSelectTitle>เลือกแปลงผัก</PlotSelectTitle>
                     <PlotSelect value={selectPlot} onChange={handlePlotChange}>
+                    <option key="none" value="none">
+                        none
+                    </option>
                     {plotList.map((plot, index) => (
                     <option key={index} value={plot.id}>
                         {plot.name}
@@ -238,7 +406,17 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
                 </PlotSelect>
                 <CheckNpkBtn onClick={updateNPK}>ตรวจค่า NPK</CheckNpkBtn>
                 { user != null 
-                ? <AddNpkBtn onClick={recordData}>บันทึกค่า NPK</AddNpkBtn>
+                ? <><AddNpkBtn onClick={recordData}>บันทึกค่า NPK</AddNpkBtn>
+                    <AutoCheckContainer>
+                        <TimeInput type="time" id="checkInTime" name="checkInTime" value={checkInTime} onChange={handleTimeChange} />
+                        <ToggleContainer>
+                            <Toggle>
+                                <Input type="checkbox" id="statusToggle" checked={status} onChange={handleToggleChange}/>
+                                <Slider />
+                            </Toggle>
+                            <p id="status">Status: {statusUI}</p>
+                        </ToggleContainer>
+                    </AutoCheckContainer></>
                 : <AddNpkBtn onClick={loginAlert}>บันทึกค่า NPK</AddNpkBtn>}
                 { user != null 
                 ? ""

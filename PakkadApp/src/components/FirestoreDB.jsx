@@ -316,6 +316,8 @@ export const addUserPlot = async(userEmail, gardenName, file, sensorName, vegNam
         image:"./path/image",
         sensor: sensorName,
         veg_name: vegName,
+        autoCheckInTime: "00:01",
+        autoCheckStatus: false
       });
 
       EditPlot(userEmail,newPlotDoc.id,"image",file ? await saveImageToStorage(file, newPlotDoc.id) : "./path/image");
@@ -377,6 +379,23 @@ export const EditPlot = async (userEmail, viewingPlot, valueTarget, newValue) =>
       plotRef[valueTarget] = newValue;
 
       await updateDoc(plotRef, { [valueTarget]: newValue });
+    } catch (error) {
+      console.error("Error deleting plot:", error);
+    }
+  }
+}
+export const UpdateAutoCheckTime = async (userEmail, viewingPlot, time, status) =>{
+  if (viewingPlot) {
+    try {
+      const userDocumentId = await GetUserDocumentId(userEmail);
+      const firestoreDB = getFirestore(firebaseApp);
+      const plotRef = doc(firestoreDB, "user_DB", userDocumentId, "plot_DB", viewingPlot);
+      
+      // Update the document with the new time data
+      await updateDoc(plotRef, {
+        autoCheckInTime: time , // Assuming you want a field called 'autoCheckInTime'\
+        autoCheckStatus: status
+      }); 
     } catch (error) {
       console.error("Error deleting plot:", error);
     }
