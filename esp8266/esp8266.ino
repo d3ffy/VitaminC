@@ -7,7 +7,7 @@
 #include <addons/RTDBHelper.h>
 
 // WiFi Credentials as constants
-const char* WIFI_SSID = "deffy's room";
+const char* WIFI_SSID = "deffy's Phone";
 const char* WIFI_PASS = "FreeWifi";
 
 // Firebase Credentials and Configuration as constants
