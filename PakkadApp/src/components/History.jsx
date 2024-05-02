@@ -425,7 +425,7 @@ const PlotHistory = styled.div`
 `;
 const TableContainer = styled.div`
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0px;
     width: 100%;
 `;
@@ -616,9 +616,9 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
                     item.nitrogen,
                     item.phosphorus,
                     item.potassium,
-                    item.summary, 
-                    item.status ?<StatusImg src={goodValue}></StatusImg>
-                                :<StatusImg src={BadValue}></StatusImg>,
+                    // item.summary, 
+                    // item.status ?<StatusImg src={goodValue}></StatusImg>
+                    //             :<StatusImg src={BadValue}></StatusImg>,
                 ]);
             setRows(formattedRows);
             }
@@ -761,8 +761,8 @@ const RightHistoryBar = ({ viewingPlot, refreshPlotList, viewingPlotName, viewin
                     <TableHead >N</TableHead>
                     <TableHead >P</TableHead>
                     <TableHead >K</TableHead>
-                    <TableHead >ความเหมาะสม</TableHead>
-                    <TableHead ></TableHead>
+                    {/* <TableHead >ความเหมาะสม</TableHead>
+                    <TableHead ></TableHead> */}
                     {rows.map((row, rowIndex) => (
                         <React.Fragment key={rowIndex}>
                         {row.map((cellData, colIndex) => (
@@ -788,10 +788,15 @@ const StyledH1 = styled(Link)`
     letter-spacing: 2px;
     margin-top: 10vh;
     text-decoration: underline;
-    color: #000;
+    color: #228C40;
     font-size: 64px;
     display: block;
     width: max-content;
+    border: 5px solid #228C40;
+    border-radius: 100px;
+    width: max-content;
+    height: max-content;
+    padding: 1% 5%;
 `;
 const  History = () => {
     const { user } = useAuth()

@@ -328,68 +328,6 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
         alert('You must login before record data!!!')
     };
 
-    const recordDataAuto  = async () => {
-        if (user) {
-            const plots = await GetPlotInfo(user.email);
-
-            for (const plot of plots) {
-                const plotId = plot.id;
-                const plotStatus = plot.autoCheckStatus;
-                const plotTime = plot.autoCheckInTime;
-
-                if (plotId && plotStatus === true) {
-                    // ดึงค่า NPK
-                    const plotData = await GetPlotDocByID(user.email, plotId);
-                    const sensorIds = plotData.sensor;
-    
-                    const getSensorNames = async (sensorId) => {
-                        const sensorData = await getSensorOfUser(user.email);
-                        const sensor = sensorData.find((sensor) => sensor.documentId === sensorId);
-                        return sensor ? sensor.name : null;
-                    };
-    
-                    const sensorNames = await getSensorNames(sensorIds);
-                    const npkData = await GetNpkFromRealtimeDB(sensorNames, user.uid);
-                    const readingRed = npkData.nitrogen !== null ? npkData.nitrogen : 0;
-                    const readingGreen = npkData.phosphorus !== null ? npkData.phosphorus : 0;
-                    const readingBlue = npkData.potassium !== null ? npkData.potassium : 0;
-                    const npkSet = {
-                        NITROGEN: readingRed,
-                        PHOSPHORUS: readingGreen,
-                        POTASSIUM: readingBlue,
-                        date: new Date()
-                    };
-
-                    scheduleNpkRecording(user.email, plotId, plotTime, npkSet);
-                }
-            }
-        }
-    }
-    function scheduleNpkRecording(userEmail, plotId, targetTime, npkSet) {
-        const now = new Date();
-        const [targetHour, targetMinute] = targetTime.split(':'); // Assuming targetTime is like "18:00"
-    
-        // Calculate target Date object
-        const targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHour, targetMinute, 0, 0);
-    
-        // Calculate time difference in milliseconds
-        let timeDiff = targetDate.getTime() - now.getTime();
-    
-        // Handle if target time has already passed today
-        if (timeDiff < 0) {
-            timeDiff += 24 * 60 * 60 * 1000; // Add 24 hours
-        } 
-    
-        // Schedule the function call
-        setTimeout(() => {
-            AddNpkToPlotHistory(userEmail, plotId, npkSet);
-        }, timeDiff); 
-    }
-    // Call recordDataAuto initially
-    // recordDataAuto(); 
-
-    // Refresh schedules every day
-    // setInterval(recordDataAuto, 24 * 60 * 60 * 1000);
     return(
         <Container>
             <InputContainer>
@@ -407,7 +345,7 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
                 <CheckNpkBtn onClick={updateNPK}>ตรวจค่า NPK</CheckNpkBtn>
                 { user != null 
                 ? <><AddNpkBtn onClick={recordData}>บันทึกค่า NPK</AddNpkBtn>
-                    <AutoCheckContainer>
+                    {/* <AutoCheckContainer>
                         <TimeInput type="time" id="checkInTime" name="checkInTime" value={checkInTime} onChange={handleTimeChange} />
                         <ToggleContainer>
                             <Toggle>
@@ -416,7 +354,8 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
                             </Toggle>
                             <p id="status">Status: {statusUI}</p>
                         </ToggleContainer>
-                    </AutoCheckContainer></>
+                    </AutoCheckContainer> */}
+                    </>
                 : <AddNpkBtn onClick={loginAlert}>บันทึกค่า NPK</AddNpkBtn>}
                 { user != null 
                 ? ""
@@ -434,10 +373,10 @@ const  CheckNpkContainer = ({viewingPlotName}) => {
                             <ValueTitle>ค่าที่วัดได้</ValueTitle>
                             <Value>{valueData.value}</Value>
                         </TestValue>
-                        <TestValue>
+                        {/* <TestValue>
                             <ValueTitle>ความเหมาะสม</ValueTitle>
                             <ValueImg src={valueData.status}></ValueImg>
-                        </TestValue>
+                        </TestValue> */}
                     </NPKCard>
                 ))}
             </NPKContainer>
