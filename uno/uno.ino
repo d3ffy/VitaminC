@@ -137,7 +137,7 @@ float calBeerLambertLaw(float value, const String& color) {
   if (value <= 0 || value >= maxVal) { 
     return 0.0;
   }
-  float length = 1.0; // Path length in cm
+  float length = 4.0; // Path length in cm
   float coefficient = getAbsorbanceCoefficient(color);
   float absorbance = log10(maxVal / value); 
   return absorbance / (length * coefficient) / 1000;
@@ -151,7 +151,7 @@ void clearSerialBuffer() {
 
 void pumpWater() {
   digitalWrite(waterPump, LOW);
-  delay(10000);
+  delay(10000); // Pumping water for 10 seconds
   digitalWrite(waterPump, HIGH);
 }
 
