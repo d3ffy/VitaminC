@@ -7,7 +7,7 @@
   GND -> GND
   A4 -> SDA
   A5 -> SCL
-  LED -> 6
+  6 -> LED 
 */
 
 #define blueLED 11
@@ -59,7 +59,7 @@ void functionHandler(const String& receivedMessage) {
 void getColorValue() {
   uint8_t rawRedValue, rawGreenValue, rawBlueValue, rawClearValue;
   float redValue, greenValue, blueValue, clearValue;
-  digitalWrite(sensorWhiteLED, HIGH);
+  // digitalWrite(sensorWhiteLED, HIGH);
   delay(500);
 
   // Turn red LED & read RED value
@@ -87,14 +87,14 @@ void getColorValue() {
   delay(500);
   
   // Read Clear Value 
-  // turnWhiteLED(HIGH);
+  turnWhiteLED(HIGH);
   delay(500);
   rawClearValue = ColorSensor.read16(TCS34725_CDATAL);
   delay(500);
-  digitalWrite(sensorWhiteLED, LOW);
-  // turnWhiteLED(LOW);
+  // digitalWrite(sensorWhiteLED, LOW);
+  turnWhiteLED(LOW);
 
-  Serial.println(String(rawRedValue) + " " + String(rawGreenValue) + " " + String(rawBlueValue) + " " + String(rawClearValue)); // debuging raw values
+  // Serial.println(String(rawRedValue) + " " + String(rawGreenValue) + " " + String(rawBlueValue) + " " + String(rawClearValue)); // debuging raw values
   // Convert Raw to RGB
   if (rawClearValue <= 0) {
     redValue = greenValue = blueValue = 0; // Set all to zero if clear value is zero
@@ -105,7 +105,7 @@ void getColorValue() {
     blueValue = (float(rawBlueValue) / rawClearValue) * 255.0;
   }
 
-  Serial.println(String(redValue) + " " + String(greenValue) + " " + String(blueValue)); // debuging rgb
+  // Serial.println(String(redValue) + " " + String(greenValue) + " " + String(blueValue)); // debuging rgb
   float nitrogenValue = calBeerLambertLaw(blueValue, "BLUE");
   float phosphorusValue = calBeerLambertLaw(greenValue, "GREEN");
   float potassiumValue = calBeerLambertLaw(redValue, "RED");
@@ -133,13 +133,14 @@ float getAbsorbanceCoefficient(const String& color) {
 }
 
 float calBeerLambertLaw(float value, const String& color) {
-  if (value <= 0 || value >= 255) {
+  float maxVal = 150.0; // assume that max color is 150
+  if (value <= 0 || value >= maxVal) { 
     return 0.0;
   }
   float length = 1.0; // Path length in cm
   float coefficient = getAbsorbanceCoefficient(color);
-  float absorbance = log10(255.0 / value);  // Assume Max color is 255
-  return absorbance / (length * coefficient);
+  float absorbance = log10(maxVal / value); 
+  return absorbance / (length * coefficient) / 1000;
 }
 
 void clearSerialBuffer() {
@@ -150,7 +151,7 @@ void clearSerialBuffer() {
 
 void pumpWater() {
   digitalWrite(waterPump, LOW);
-  delay(1000);
+  delay(10000);
   digitalWrite(waterPump, HIGH);
 }
 

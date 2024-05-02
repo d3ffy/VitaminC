@@ -46,7 +46,7 @@ export const GetNpkFromRealtimeDB = (sensor, userId) => {
                 .catch((error) => {
                   reject(error);
                 });
-            }, 20000);
+            }, 30000);
 
             const checkCommandNone = onValue(realtimeDBRefCOMMAND, async (snapshot) => {
               const command = snapshot.val();
