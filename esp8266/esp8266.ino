@@ -1,42 +1,33 @@
-#include <ESP8266WiFi.h>
-#include <Firebase_ESP_Client.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
+#include <ESP8266WiFi.h> // WiFi library for ESP8266
+#include <Firebase_ESP_Client.h> // Firebase client library for ESP8266 and ESP32
+#include <NTPClient.h> // Network Time Protocol client library for getting accurate time
+#include <WiFiUdp.h> // Library for handling UDP connections, needed for NTPClient
 
-// Provide the token generation process info.
-#include <addons/TokenHelper.h>
-// Provide the RTDB payload printing info and other helper functions.
-#include <addons/RTDBHelper.h>
+#include <addons/TokenHelper.h> // Helper for Firebase authentication token
+#include <addons/RTDBHelper.h> // Helper for handling Firebase RTDB operations
 
-// WiFi Credentials as constants
-const char* WIFI_SSID = "deffy's room";
-const char* WIFI_PASS = "FreeWifi";
+// WiFi and Firebase Configuration
+const char* WIFI_SSID = "WIFI_NAME";
+const char* WIFI_PASS = "WIFI_PASSWORD";
+const char* API_KEY = "FIREBASE_API_KEY";
+const char* DATABASE_URL = "FIREBASE_DATABASE_URL";
+const char* PROJECT_ID = "FIREBASE_PROJECT_ID";
+const char* USER_EMAIL = "USER_EMAIL";
+const char* USER_PASSWORD = "USER_PASSWORD";
+const char* SENSOR_NAME = "SENSOR_NAME";
 
-// Firebase Credentials and Configuration as constants
-const char* API_KEY = "AIzaSyCPkTRiFpWFcjuJvAiOZCqoMXJN2Gvtzjc";
-const char* DATABASE_URL = "https://vitaminc-4695a-default-rtdb.asia-southeast1.firebasedatabase.app/";
-const char* PROJECT_ID = "vitaminc-4695a";
-const char* USER_EMAIL = "deffy@gmail.com";
-const char* USER_PASSWORD = "123456";
-
-// Define sensor's name for Firebase
-const char* SENSOR_NAME = "sensor_baboo";
-
-// Firebase objects as global to initialize once
+// Global Variables and Objects
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
-
-// Define RTDB path
-// /{uid}/SENSOR_NAME/COMMAND
 String path_RTDB;
+unsigned long lastFetch;
 
 // timeClient to get current time from NTP server
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 60000);
 uint8_t SCHEDULE_HOUR = 12; // Set the scheduled hour in UTC+7
 
-unsigned long lastFetch;
 void setup() {
   Serial.begin(115200);
 
@@ -53,12 +44,12 @@ void setup() {
 }
 
 void loop() {
-  static String receivedMessage; // Use static to keep it between calls but avoid global scope
-
+  // Handle time updates, command processing, and message handling
+  static String receivedMessage;
   while (WiFi.status() == WL_CONNECTED) {
     timeClient.update();
     if (isScheduled()) {
-      // Sent Command to Arduino
+      // Sent Schedule Command to Arduino
       Serial.println(F("Schedule time"));
       Serial.println(F("READ"));
       delay(50 * 1000); // Delay 50 second for avioding multiple request
@@ -111,27 +102,18 @@ void functionHandler(const String& receivedMessage) {
           Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "ERROR");
           Serial.println(fbdo.errorReason()); 
           }
-      // Checking CALIBRATE command
-      } else if (fbdo.stringData() == "CALIBRATE") {
-        Serial.println(F("CALIBRATE request"));
-
-        if (Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "PROCESS")) {
-          Serial.println(F("Changing command to PROCESS"));
-        } else { 
-          Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "ERROR");
-          Serial.println(fbdo.errorReason()); 
-          }
       }
       lastFetch = millis();
 
   } else if (receivedMessage.startsWith("ERROR")) {
-    Serial.println(F("Error: please calibrate sensor and try again"));
+    Serial.println(F("Error: please wait and try again"));
     Firebase.RTDB.setString(&fbdo, path_RTDB + "/COMMAND", "ERROR");
     Serial.println(F("Changing command to ERROR"));
   }
 }
 
 void connectWiFi() {
+  // Initialize WiFi connection
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.print(F("Connecting to WiFi"));
   while (WiFi.status() != WL_CONNECTED) {
@@ -157,7 +139,7 @@ void connectFirebase() {
 }
 
 void sentValueToRTDB(const float& nitrogen, const float& phosphorus, const float& potassium) {
-  // Sent value to RTDB
+  // Send sensor values to Firebase RTDB
   if (Firebase.RTDB.setFloat(&fbdo, path_RTDB + "/nitrogen", nitrogen) &&
       Firebase.RTDB.setFloat(&fbdo, path_RTDB + "/phosphorus", phosphorus) &&
       Firebase.RTDB.setFloat(&fbdo, path_RTDB + "/potassium", potassium)){
@@ -167,6 +149,7 @@ void sentValueToRTDB(const float& nitrogen, const float& phosphorus, const float
 }
 
 void initRTDB() {
+  // Set initial RTDB command state to "NONE"
   Serial.println(F("Initializing RTDB"));
   path_RTDB += "/" + String(auth.token.uid.c_str()) + "/" + SENSOR_NAME;
   // Create RTDB path
@@ -178,7 +161,7 @@ void initRTDB() {
 }
 
 void initFirestore() {
-  // Checking initialized name
+  // Set initial RTDB command state to "NONE"
   Serial.println(F("Initializing Firestore"));
 
   if (!checkSensorName()) {
@@ -236,6 +219,7 @@ bool checkSensorName() {
 }
 
 String formatISO8601Timestamp() {
+  // Format the current time into an ISO 8601 string
     timeClient.update();
     unsigned long epochTime = timeClient.getEpochTime();
     struct tm *ptm = gmtime((time_t *)&epochTime);  // Get UTC time structure
@@ -249,13 +233,16 @@ String formatISO8601Timestamp() {
 }
 
 String getSensorDocumentId() {
+  // Retrieve the document ID for the sensor from Firestore.
+  // This involves querying Firestore for the 'sensor_DB' collection associated with the user,
+  // iterating through documents to find a match for the sensor name, and then extracting the document ID.
   String path = "user_DB/" + String(auth.token.uid.c_str()) + "/sensor_DB";
   if (Firebase.Firestore.getDocument(&fbdo, PROJECT_ID, "", path, "name")) {
     FirebaseJson json;
     FirebaseJsonData jsonData;
     json.setJsonData(fbdo.payload().c_str());
 
-    // Find the document ID with the sensor name
+    // Parse through documents to find the sensor name and retrieve its document ID.
     if (json.get(jsonData, "documents")) {
       for (uint8_t i = 0; i < 20; i++) {
         String jsonPath = "documents/[" + String(i) + "]/fields/name/stringValue";
@@ -268,7 +255,7 @@ String getSensorDocumentId() {
               String fullPath = jsonData.stringValue;
               int lastSlashIndex = fullPath.lastIndexOf('/');
               if (lastSlashIndex != -1) {
-                return fullPath.substring(lastSlashIndex + 1); // Return the document ID
+                return fullPath.substring(lastSlashIndex + 1); // Extract and return the document ID
               }
             }
           }
@@ -283,7 +270,8 @@ String getSensorDocumentId() {
 }
 
 void sentValuetoFirestore(const float& nitrogen, const float& phosphorus, const float& potassium) {
-  // Get sensor document ID
+  // Get sensor document ID and use it to send nutrient values to Firestore.
+  // This function creates a new document in the 'history_DB' subcollection under the appropriate 'plot_DB' document.
   String sensorDocId = getSensorDocumentId();
   if (sensorDocId.isEmpty()) {
     Serial.println(F("Sensor document ID not found"));
@@ -294,9 +282,9 @@ void sentValuetoFirestore(const float& nitrogen, const float& phosphorus, const 
   if (Firebase.Firestore.getDocument(&fbdo, PROJECT_ID, "", path, "sensor")) {
     FirebaseJson json;
     FirebaseJsonData jsonData;
-
     json.setJsonData(fbdo.payload().c_str());
     
+    // Parse documents to find a matching plot for the sensor, then create a new history entry.
     if (json.get(jsonData, "documents")) {
       for (uint8_t i = 0; i < 20; i++) { 
         String jsonPath = "documents/[" + String(i) + "]/fields/sensor/stringValue";
@@ -312,7 +300,7 @@ void sentValuetoFirestore(const float& nitrogen, const float& phosphorus, const 
               if (lastSlashIndex != -1) {
                 String plot_db_docId =  fullPath.substring(lastSlashIndex + 1); // Return the document ID
 
-                // Setup path for new history record
+                // Append the document ID to path and setup new history data with timestamp.
                 path += "/" + plot_db_docId + "/history_DB";
                 FirebaseJson newHistoryData;
                 String timestamp = formatISO8601Timestamp();
@@ -337,6 +325,7 @@ void sentValuetoFirestore(const float& nitrogen, const float& phosphorus, const 
 }
 
 bool isScheduled() {
+  // Check if the current time matches the scheduled time for an action
   timeClient.update();
   int currentHour = timeClient.getHours() + 7; // UTC -> UTC+7
   int currentMinute = timeClient.getMinutes();
