@@ -22,15 +22,37 @@ Make sure you have the following installed on your system:
 
 ### Installation
 
-```bash
+```
 git clone https://github.com/d3ffy/VitaminC.git
 cd PakkadApp
 npm install
 ```
 
+> [!IMPORTANT]
+> You have to add file `PakkadApp/src/firebase.js` and include your Firebase API Key. Your file should be like this.
+```JavaScript
+// PakkadApp/src/firebase.js
+import { initializeApp } from "firebase/app";
+
+// Firebase Config
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DATABASE_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID",
+    measurementId: "YOUR_MEASUREMENT_ID"
+  }
+
+const firebaseApp = initializeApp(firebaseConfig);
+export default firebaseApp;
+```
+
 ### Running the Application
 
-To run the React application locally, use the following command: `bash npm start`
+To run the React application locally, use the following command: `npm start`
 
 This will start the development server and open the application in your default web browser at `http://localhost:3000`. The page will automatically reload if you make any changes to the code.
 
@@ -46,6 +68,10 @@ We are grateful for the support from:
 - [React with Firebase](https://www.tutor4dev.com/article/2019-02-25-cloud-firestore-reactjs-crud-application)
 
 ## 🔧 Improvements
+- More test result.
+- Adding calibrating function to color sensor.
+- Using more accurate color sensor.
+- Using Machine Learning for predicting.
 
 ## 👨‍🏫 Advisor 
 This project was advised and supervised by:
