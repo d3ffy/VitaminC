@@ -29,7 +29,7 @@ npm install
 ```
 
 > [!IMPORTANT]
-> You have to add file `PakkadApp/src/firebase.js` and include your Firebase API Key. Your file should be like this.
+> You need to add file `PakkadApp/src/firebase.js` and include your Firebase API Key. Your file should be like this.
 ```JavaScript
 // PakkadApp/src/firebase.js
 import { initializeApp } from "firebase/app";
