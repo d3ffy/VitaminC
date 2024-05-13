@@ -52,7 +52,7 @@ void loop() {
       // Sent Schedule Command to Arduino
       Serial.println(F("Schedule time"));
       Serial.println(F("READ"));
-      delay(50 * 1000); // Delay 50 second for avioding multiple request
+      delay(60 * 1000); // Delay 60 second for avioding multiple request
     }
     messageHandler(receivedMessage);
     functionHandler(receivedMessage);
@@ -80,7 +80,7 @@ void functionHandler(const String& receivedMessage) {
     if (isScheduled()) {
       // Sent value to Firestore
       sentValuetoFirestore(nitrogen, phosphorus, potassium);
-      delay(50 * 1000); // Delay 50 second for avioding multiple request
+      delay(60 * 1000); // Delay 60 second for avioding multiple request
     }
     
     // Change the command to NONE after sending the value
@@ -136,6 +136,7 @@ void connectFirebase() {
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
   }
+  Serial.println(F("Firebase connected successfully"));
 }
 
 void sentValueToRTDB(const float& nitrogen, const float& phosphorus, const float& potassium) {
@@ -166,21 +167,12 @@ void initFirestore() {
 
   if (!checkSensorName()) {
     // If sensor name isn't initialized
-    String path = "user_DB/" + String(auth.token.uid.c_str());
+    // Create sensor field
+    String path = "user_DB/" + String(auth.token.uid.c_str()) "/sensor_DB";
     FirebaseJson json;
-    
-    // Create email field
-    json.set("fields/email/stringValue", USER_EMAIL);
+    json.set("fields/name/stringValue", SENSOR_NAME);
     if (Firebase.Firestore.createDocument(&fbdo, PROJECT_ID, "", path, json.raw())) {
-      json.clear();
-      // Create sensor field
-      path += "/sensor_DB";
-      json.set("fields/name/stringValue", SENSOR_NAME);
-      if (Firebase.Firestore.createDocument(&fbdo, PROJECT_ID, "", path, json.raw())) {
-        Serial.println("Create Successfully");
-      } else {
-        Serial.println(fbdo.errorReason());
-      }
+      Serial.println(F("Firebase sensor_name created"));
     } else {
       Serial.println(fbdo.errorReason());
     }

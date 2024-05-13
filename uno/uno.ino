@@ -136,7 +136,7 @@ float getAbsorbanceCoefficient(const String& color) {
 }
 
 float calBeerLambertLaw(float value, const String& color) {
-  float maxVal = 140.0; // assume that max color is 140
+  float maxVal = 140.0; // need sensor calibration before using
   if (value <= 0 || value >= maxVal) { 
     return 0.0;
   }
